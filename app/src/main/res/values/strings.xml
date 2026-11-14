@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel">Downloads</string>
+    <string name="widget_description">Now playing, with play, skip and favorite</string>
+    <string name="lyrics_widget_description">The lyrics of the song playing, line by line as they are sung</string>
+</resources>

@@ -1,0 +1,19 @@
+# Build output (every module)
+build/
+.gradle/
+.kotlin/
+.externalNativeBuild
+.cxx
+captures/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Machine-specific / private
+local.properties
+*.jks
+*.keystore
+*.apk
+*.aab

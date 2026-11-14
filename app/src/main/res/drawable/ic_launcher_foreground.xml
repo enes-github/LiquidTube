@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="1.5">
+        <!-- Beam -->
+        <path android:fillColor="#FFFFFFFF" android:pathData="M45,36 L72,29 L72,37.5 L45,44.5 Z" />
+        <!-- Stems -->
+        <path android:fillColor="#FFFFFFFF" android:pathData="M45,38 L50,38 L50,70 L45,70 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M67,31 L72,31 L72,63 L67,63 Z" />
+        <!-- Note heads shaped as rounded play buttons (the YouTube half of the name). -->
+        <path android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="4" android:strokeLineJoin="round"
+            android:pathData="M33,61 L33,79 L49,70 Z" />
+        <path android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="4" android:strokeLineJoin="round"
+            android:pathData="M55,54 L55,72 L71,63 Z" />
+    </group>
+</vector>

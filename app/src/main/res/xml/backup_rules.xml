@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: Google's automatic backup. Only your data, never the music
+     (that's far over Google's 25 MB limit) or the sign-in cookie. -->
+<full-backup-content>
+    <include domain="sharedpref" path="library.xml" />
+    <include domain="sharedpref" path="settings.xml" />
+    <include domain="sharedpref" path="search.xml" />
+    <include domain="sharedpref" path="session.xml" />
+    <include domain="sharedpref" path="new_releases.xml" />
+    <include domain="file" path="lyrics/" />
+</full-backup-content>
