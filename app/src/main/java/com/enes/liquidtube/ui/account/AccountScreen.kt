@@ -166,7 +166,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                     checked = smart,
                     onCheckedChange = { on ->
                         connection.settings.setSmartDownloads(on)
-                        if (on) connection.smart.refresh() else connection.downloads.pruneAuto(emptySet())
+                        if (on) connection.smart.refresh() else { connection.downloads.pruneAuto(emptySet()); connection.smart.clearMix() }
                     },
                     colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFF34C759), checkedThumbColor = Color.White),
                 )

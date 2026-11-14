@@ -198,6 +198,8 @@ fun SongRow(
     menuExtra: List<MenuAction> = emptyList(),
     /** Replaces the ••• button (e.g. an add button in Add Songs). */
     trailing: (@Composable () -> Unit)? = null,
+    /** Not on the phone yet ("Downloading 40%", "Waiting for Wi-Fi"): the row is greyed out. */
+    status: String? = null,
 ) {
     val c = AppTheme.colors
     val menus = LocalMenus.current
@@ -208,12 +210,12 @@ fun SongRow(
     val cachedList = connection?.playCache?.cached?.collectAsStateWithLifecycle()?.value.orEmpty()
     val downloaded = connection?.downloads?.downloads?.collectAsStateWithLifecycle()?.value?.get(song.id)?.isDone == true ||
         cachedList.any { it.id == song.id }
-    val unavailable = !online && !downloaded
+    val unavailable = (!online && !downloaded) || status != null
 
     Row(
         modifier
             .fillMaxWidth()
-            .graphicsLayer { alpha = if (unavailable) 0.38f else 1f }
+            .graphicsLayer { alpha = when { status != null -> 0.55f; unavailable -> 0.38f; else -> 1f } }
             .pressMenu(onClick = onClick, menu = { menus?.song(song, menuExtra) }, highlight = true)
             .padding(start = Gutter),
         verticalAlignment = Alignment.CenterVertically,
@@ -235,7 +237,7 @@ fun SongRow(
                     )
                     Spacer(Modifier.height(1.dp))
                     Text(
-                        song.artists,
+                        if (status != null) "${song.artists} · $status" else song.artists,
                         style = AppTheme.type.subhead.copy(fontSize = 14.sp),
                         color = c.secondaryLabel,
                         maxLines = 1,

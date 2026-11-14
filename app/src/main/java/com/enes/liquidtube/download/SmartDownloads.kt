@@ -33,6 +33,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SmartDownloads @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     private val downloads: DownloadUtil,
     private val library: LibraryStore,
     private val settings: SettingsStore,
@@ -46,9 +47,40 @@ class SmartDownloads @Inject constructor(
     private var lastRun = 0L
     private var started = false
 
+    private val prefs = context.getSharedPreferences("offline_mix", android.content.Context.MODE_PRIVATE)
+    private val listSerializer = kotlinx.serialization.builtins.ListSerializer(SongItem.serializer())
+    private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+    private val _mix = kotlinx.coroutines.flow.MutableStateFlow(
+        prefs.getString("mix", null)?.let { runCatching { json.decodeFromString(listSerializer, it) }.getOrNull() }.orEmpty()
+    )
+    /**
+     * Every song the Offline Mix is made of, including those still downloading or waiting,
+     * so the list shows the whole mix right away.
+     */
+    val mix: kotlinx.coroutines.flow.StateFlow<List<SongItem>> = _mix
+
+    /** Smart Downloads turned off: there's no mix to show. */
+    fun clearMix() = setMix(emptyList())
+
+    private fun setMix(songs: List<SongItem>) {
+        _mix.value = songs
+        prefs.edit().putString("mix", json.encodeToString(listSerializer, songs)).apply()
+    }
+
     fun start() {
         if (started) return
         started = true
+        // A song just finished downloading, or a played song is now fully cached: keep
+        // its cover and lyrics with it.
+        downloads.onSongSaved = { song -> scope.launch { saveExtras(listOf(song)) } }
+        scope.launch {
+            playCache.cached.collect { cached -> saveExtras(cached.take(200)) }
+        }
+        // Back online: catch up on anything that couldn't be saved while offline.
+        scope.launch {
+            network.online.collect { online -> if (online) { delay(5_000); saveExtras(offlineSongs()) } }
+        }
         scope.launch {
             delay(8_000) // let the app settle first
             combine(network.online, settings.smartDownloads, settings.smartSize) { online, on, size -> Triple(online, on, size) }
@@ -71,6 +103,7 @@ class SmartDownloads @Inject constructor(
                 }
                 lastRun = now
                 val mix = pick(settings.smartSize.value)
+                setMix(mix)
                 // Keep auto-downloads only for mix songs the cache doesn't already hold
                 // (drops the duplicate copies earlier versions made, and anything over the size).
                 downloads.pruneAuto(mix.filterNot { playCache.isCached(it.id) }.map { it.id }.toSet())
@@ -78,7 +111,7 @@ class SmartDownloads @Inject constructor(
                 // cache lets one go later, the next refresh downloads it.
                 downloads.downloadAuto(mix.filterNot { playCache.isCached(it.id) })
                 Log.i(TAG, "Offline Mix: ${mix.size} songs selected")
-                fetchLyrics(mix + downloads.downloads.value.values.filter { it.isDone }.map { it.song })
+                saveExtras(offlineSongs())
             }
         }
     }
@@ -89,16 +122,37 @@ class SmartDownloads @Inject constructor(
      * Saves lyrics for offline songs in the background (a few at a time, gently), so
      * they show without a connection and can be found by a line in Search.
      */
-    private fun fetchLyrics(songs: List<SongItem>) {
-        if (lyricsJob?.isActive == true) return
-        lyricsJob = scope.launch {
-            val missing = songs.distinctBy { it.id }.filterNot { com.enes.liquidtube.data.LyricsStore.has(it.id) }.take(60)
-            for (song in missing) {
+    /** Everything playable offline: downloads and the listening cache. */
+    private fun offlineSongs(): List<SongItem> =
+        (downloads.downloads.value.values.filter { it.isDone }.map { it.song } + playCache.cached.value).distinctBy { it.id }
+
+    private val extrasQueue = java.util.concurrent.ConcurrentLinkedQueue<SongItem>()
+    private var extrasJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * Keeps each offline song's cover and lyrics on the phone, so both show without a
+     * connection. Runs gently in the background; songs whose extras are saved are skipped.
+     */
+    private fun saveExtras(songs: List<SongItem>) {
+        songs.forEach { song ->
+            val need = (song.thumbnailUrl != null && !com.enes.liquidtube.data.OfflineArt.has(song.thumbnailUrl!!)) ||
+                !com.enes.liquidtube.data.LyricsStore.has(song.id)
+            if (need && extrasQueue.none { it.id == song.id }) extrasQueue += song
+        }
+        if (extrasJob?.isActive == true) return
+        extrasJob = scope.launch {
+            var done = 0
+            while (true) {
                 if (!network.online.value) break
-                repository.lyrics(song, 0L)
-                delay(1_500)
+                val song = extrasQueue.poll() ?: break
+                runCatching { com.enes.liquidtube.data.OfflineArt.save(context, song.thumbnailUrl) }
+                if (!com.enes.liquidtube.data.LyricsStore.has(song.id)) {
+                    repository.lyrics(song, 0L)
+                    delay(1_200) // be gentle with the lyrics services
+                }
+                done++
             }
-            if (missing.isNotEmpty()) Log.i(TAG, "Lyrics saved for offline: checked ${missing.size} songs")
+            if (done > 0) Log.i(TAG, "Offline extras: covers and lyrics saved for $done songs")
         }
     }
 

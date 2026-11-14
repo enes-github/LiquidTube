@@ -155,7 +155,10 @@ class MusicRepository {
         if (result != null) {
             lyricsCache[song.id] = result
             withContext(Dispatchers.IO) { LyricsStore.write(song, result) }
-        } else if (!failed) noLyrics += song.id
+        } else if (!failed) {
+            noLyrics += song.id
+            withContext(Dispatchers.IO) { LyricsStore.markNone(song.id) }
+        }
         return result
     }
 

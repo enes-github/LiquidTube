@@ -14,6 +14,7 @@ class App : Application(), SingletonImageLoader.Factory {
         com.enes.innertube.InnerTube.logger = { android.util.Log.i("LiquidTube", it) }
         com.enes.liquidtube.data.ImagePrefetcher.init(this)
         com.enes.liquidtube.data.LyricsStore.init(this)
+        com.enes.liquidtube.data.OfflineArt.init(this)
         com.enes.liquidtube.data.LyricsTranslator.init(this)
         com.enes.liquidtube.data.NewReleases.init(this)
         com.enes.liquidtube.data.AutoBackup.init(this)
@@ -22,6 +23,8 @@ class App : Application(), SingletonImageLoader.Factory {
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
             .crossfade(160)
+            // Covers of songs you have offline come from their saved file.
+            .components { add(com.enes.liquidtube.data.OfflineArt.CoilInterceptor) }
             // Big caches: covers come back instantly when you scroll back or reopen a page.
             .memoryCache { coil3.memory.MemoryCache.Builder().maxSizePercent(context, 0.3).build() }
             .diskCache {

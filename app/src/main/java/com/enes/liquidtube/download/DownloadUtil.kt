@@ -188,7 +188,12 @@ class DownloadUtil @Inject constructor(
         ) return
         val info = download.toInfo() ?: return
         _downloads.update { it + (info.song.id to info) }
+        // Just finished: keep its cover and lyrics with it, for offline.
+        if (info.isDone && old?.isDone != true) onSongSaved?.invoke(info.song)
     }
+
+    /** Set by Smart Downloads: saves a finished song's cover and lyrics. */
+    @Volatile var onSongSaved: ((SongItem) -> Unit)? = null
 
     private fun ensureProgressLoop() {
         if (progressJob?.isActive == true) return

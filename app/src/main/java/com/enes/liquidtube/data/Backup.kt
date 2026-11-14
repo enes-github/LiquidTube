@@ -44,6 +44,12 @@ object Backup {
                     put("downloads", json.encodeToJsonElement(songs, done.filter { it.id !in auto }))
                     put("mixDownloads", json.encodeToJsonElement(songs, done.filter { it.id in auto }))
                 }
+                // Saved lyrics, so they show offline again right after a restore.
+                put("lyrics", buildJsonObject {
+                    LyricsStore.exportRaw().forEach { (name, text) ->
+                        runCatching { json.parseToJsonElement(text) }.getOrNull()?.let { put(name, it) }
+                    }
+                })
                 put("version", 1)
                 put("createdAt", System.currentTimeMillis())
                 put("stores", buildJsonObject {
@@ -88,6 +94,9 @@ object Backup {
                 root["downloads"]?.let { putString("restore_queue", it.toString()) }
                 root["mixDownloads"]?.let { putString("restore_mix", it.toString()) }
             }.commit()
+            root["lyrics"]?.jsonObject?.let { saved ->
+                LyricsStore.importRaw(saved.mapValues { (_, v) -> v.toString() })
+            }
             val stores = root["stores"]!!.jsonObject
             for ((name, entries) in stores) {
                 if (name !in STORES) continue

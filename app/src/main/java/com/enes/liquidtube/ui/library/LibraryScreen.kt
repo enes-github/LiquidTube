@@ -132,6 +132,7 @@ fun LibraryScreen(onOpenList: (String) -> Unit, onOpenLibrary: (String) -> Unit)
     val offlineMix = (downloadMap.values.filter { it.isDone && it.song.id in autoIds }.map { it.song } +
         cachedSongs.filter { downloadMap[it.id]?.isDone != true }).distinctBy { it.id }
     val smartOn by connection.settings.smartDownloads.collectAsStateWithLifecycle()
+    val mixPlan by connection.smart.mix.collectAsStateWithLifecycle()
     val play: (List<SongItem>, Int) -> Unit = { songs, i -> connection.play(songs, i) }
     val listening by connection.library.listening.collectAsStateWithLifecycle()
     val replayArt = remember(listening) {
@@ -147,7 +148,12 @@ fun LibraryScreen(onOpenList: (String) -> Unit, onOpenLibrary: (String) -> Unit)
         if (loggedIn) add(PinCard("Liked Songs", "YouTube Music", emptyList(), Icons.Rounded.Favorite, PinPink) { nav.openCollection("VLLM") })
         add(PinCard("Downloaded", "${songCount(downloaded.size)}", downloaded.art(), Icons.Rounded.DownloadDone, PinGreen) { onOpenList("downloads") })
         if (smartOn || offlineMix.isNotEmpty()) {
-            add(PinCard("Offline Mix", "${songCount(offlineMix.size)} \u00B7 Auto", offlineMix.art(), Icons.Rounded.AutoAwesome, PinPurple) { onOpenList("offline") })
+            val planned = (offlineMix + mixPlan).distinctBy { it.id }.size
+            add(PinCard(
+                "Offline Mix",
+                if (planned > offlineMix.size) "${offlineMix.size} of ${songCount(planned)} \u00B7 Auto" else "${songCount(offlineMix.size)} \u00B7 Auto",
+                offlineMix.art(), Icons.Rounded.AutoAwesome, PinPurple,
+            ) { onOpenList("offline") })
         }
     }
 
@@ -426,6 +432,26 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
     val downloadMap by connection.downloads.downloads.collectAsStateWithLifecycle()
     val autoIds by connection.downloads.autoIds.collectAsStateWithLifecycle()
     var source by rememberSaveable { mutableStateOf(DownloadSource.All) }
+    val cachedSongs by connection.playCache.cached.collectAsStateWithLifecycle()
+    val mixPlan by connection.smart.mix.collectAsStateWithLifecycle()
+    val online by connection.network.online.collectAsStateWithLifecycle()
+    val onCellularToo by connection.settings.smartOnCellular.collectAsStateWithLifecycle()
+    val cachedIds = remember(cachedSongs) { cachedSongs.map { it.id }.toSet() }
+    /** Why a song in this list isn't on the phone yet (null = it is). */
+    fun pendingStatus(song: SongItem): String? {
+        if (kind != "offline" && kind != "downloads") return null
+        if (song.id in cachedIds) return null
+        val d = downloadMap[song.id]
+        return when {
+            d?.isDone == true -> null
+            d?.state == androidx.media3.exoplayer.offline.Download.STATE_FAILED -> "Couldn\u2019t download"
+            !online -> "Waiting for a connection"
+            d?.state == androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING && d.percent > 0f -> "Downloading ${d.percent.toInt()}%"
+            d?.state == androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING -> "Downloading\u2026"
+            !onCellularToo && kind == "offline" && !connection.network.isUnmetered() -> "Waiting for Wi-Fi"
+            else -> "Waiting to download"
+        }
+    }
     // Recently Played: everywhere (your YouTube Music history) or just this device.
     val loggedIn by connection.auth.isLoggedIn.collectAsStateWithLifecycle()
     var recentSource by rememberSaveable { mutableStateOf(RecentSource.All) }
@@ -446,17 +472,21 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
     }
     val (title, songs) = when (kind) {
         "favorites" -> "Favorite Songs" to favorites
-        "downloads" -> "Downloaded" to downloadMap.values.filter { d ->
-            d.isDone && when (source) {
+        // Finished downloads first, then the ones still on their way (shown greyed out).
+        "downloads" -> "Downloaded" to downloadMap.values.sortedBy { !it.isDone }.filter { d ->
+            (d.isDone || d.isActive || d.state == androidx.media3.exoplayer.offline.Download.STATE_FAILED) && when (source) {
                 DownloadSource.All -> true
                 DownloadSource.Mine -> d.song.id !in autoIds
                 DownloadSource.Auto -> d.song.id in autoIds
             }
         }.map { it.song }
-        "offline" -> "Offline Mix" to (
-            connection.playCache.cached.collectAsStateWithLifecycle().value.filter { downloadMap[it.id]?.isDone != true } +
-                downloadMap.values.filter { it.isDone && it.song.id in autoIds }.map { it.song }
-            ).distinctBy { it.id }
+        // The whole mix right away: what's ready first, then what's still downloading.
+        "offline" -> "Offline Mix" to run {
+            val ready = (cachedSongs.filter { downloadMap[it.id]?.isDone != true } +
+                downloadMap.values.filter { it.isDone && it.song.id in autoIds }.map { it.song }).distinctBy { it.id }
+            val readyIds = ready.map { it.id }.toSet()
+            ready + mixPlan.filter { it.id !in readyIds }
+        }
         else -> if (kind.startsWith("smart-")) {
             com.enes.liquidtube.data.SmartPlaylists.all(connection.library, downloadMap)
                 .firstOrNull { it.id == kind }?.let { it.title to it.songs } ?: ("Smart Playlist" to emptyList())
@@ -565,7 +595,26 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
             item { EmptyState(Icons.Rounded.Search, "No matches", "Try another search.") }
         }
         itemsIndexed(shown, key = { _, s -> s.id }) { i, song ->
-            SongRow(song, onClick = { connection.play(shown, i) }, showDivider = i != shown.lastIndex)
+            SongRow(
+                song,
+                onClick = { connection.play(shown, i) },
+                showDivider = i != shown.lastIndex,
+                status = pendingStatus(song),
+                modifier = Modifier.animateItem(),
+            )
+        }
+        if (kind == "offline" || kind == "downloads") {
+            val waiting = songs.count { pendingStatus(it) != null }
+            if (waiting > 0) {
+                item(key = "pending-note") {
+                    Text(
+                        "${songs.size - waiting} of ${songs.size} ready offline \u00B7 $waiting still downloading",
+                        style = AppTheme.type.footnote,
+                        color = AppTheme.colors.secondaryLabel,
+                        modifier = Modifier.padding(horizontal = Gutter).padding(top = 14.dp),
+                    )
+                }
+            }
         }
         item(key = "count") {
             Text(

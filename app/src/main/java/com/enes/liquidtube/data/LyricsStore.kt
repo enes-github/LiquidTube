@@ -36,7 +36,28 @@ object LyricsStore {
 
     private fun file(id: String) = dir?.let { File(it, "${id.replace('/', '_')}.json") }
 
-    fun has(id: String) = file(id)?.exists() == true
+    fun has(id: String) = file(id)?.exists() == true || noneFile(id)?.exists() == true
+
+    private fun noneFile(id: String) = dir?.let { File(it, "${id.replace('/', '_')}.none") }
+
+    /** Both lyrics sources answered "none": don't ask again for this song. */
+    fun markNone(id: String) {
+        runCatching { noneFile(id)?.createNewFile() }
+    }
+
+    /** All saved lyrics (file name → contents), for the backup. */
+    fun exportRaw(): Map<String, String> =
+        dir?.listFiles { f -> f.name.endsWith(".json") }?.associate { it.name to it.readText() }.orEmpty()
+
+    /** Lyrics from a backup. */
+    fun importRaw(files: Map<String, String>) {
+        val d = dir ?: return
+        files.forEach { (name, text) ->
+            // Plain file names only (never a path out of the lyrics folder).
+            if (name.endsWith(".json") && name == File(name).name) runCatching { File(d, name).writeText(text) }
+        }
+        synchronized(this) { index = null }
+    }
 
     fun read(id: String): Lyrics? = runCatching {
         val f = file(id)?.takeIf { it.exists() } ?: return null
