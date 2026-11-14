@@ -1,6 +1,12 @@
 <h1 align="center">LiquidTube</h1>
 
 <p align="center">
+  <a href="https://github.com/enes-github/LiquidTube/releases/latest"><img src="https://img.shields.io/github/v/release/enes-github/LiquidTube?label=download&color=fa2d48"></a>
+  <img src="https://img.shields.io/badge/Android-12%2B-34C759">
+  <img src="https://img.shields.io/badge/license-GPL--3.0-0A84FF">
+</p>
+
+<p align="center">
   A native Android music player with an iOS&nbsp;26 "Liquid Glass" look, built on top of YouTube Music.<br>
   Kotlin · Jetpack Compose · Media3
 </p>
@@ -112,6 +118,12 @@ stats and settings, and **re-downloads your downloads and Offline Mix**.
 
 ---
 
+## 📥 Install
+
+Download the latest APK from [**Releases**](https://github.com/enes-github/LiquidTube/releases/latest)
+and open it on your phone (allow installing from your browser or file manager when asked).
+Android 12 or newer.
+
 ## 🛠️ Build
 
 - Android Studio (Ladybug or newer), JDK 17
@@ -133,3 +145,8 @@ stats and settings, and **re-downloads your downloads and Offline Mix**.
 | `app/.../download/` | Downloads, Offline Mix, listening cache |
 | `app/.../data/` | Settings, library, lyrics, translations, backup, network monitor |
 | `app/.../widget/`, `dream/` | Home screen widgets and the screen saver |
+
+## 📄 License
+
+LiquidTube is free software under the [GNU General Public License v3.0](LICENSE).
+You can use, change and share it; versions you share must stay open source under the same license.
