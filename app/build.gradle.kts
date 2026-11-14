@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,15 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+}
+
+// Release signing key: kept outside the repo. Point LIQUIDTUBE_KEYSTORE (or the default
+// path below) at a keystore.properties with storeFile / storePassword / keyAlias / keyPassword.
+// Without it, release builds fall back to the debug key so anyone can still build.
+val keystoreProps = Properties().apply {
+    val path = System.getenv("LIQUIDTUBE_KEYSTORE") ?: "${rootDir.parentFile}/signing/keystore.properties"
+    val f = file(path)
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 android {
@@ -19,13 +30,23 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (keystoreProps.getProperty("storeFile") != null) {
+            create("release") {
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Personal build: optimized (R8) but signed with the debug key so it
-            // installs over the dev build. Compose is far smoother in release.
+            // Optimized (R8); Compose is far smoother in release than debug.
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
