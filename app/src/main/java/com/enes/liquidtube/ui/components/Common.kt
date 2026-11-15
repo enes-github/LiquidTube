@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.components
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -408,8 +409,8 @@ fun PlayShuffleButtons(onPlay: () -> Unit, onShuffle: () -> Unit, modifier: Modi
         modifier.fillMaxWidth().padding(horizontal = Gutter),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        PillButton(Icons.Rounded.PlayArrow, "Play", onPlay, Modifier.weight(1f))
-        PillButton(Icons.Rounded.Shuffle, "Shuffle", onShuffle, Modifier.weight(1f))
+        PillButton(Icons.Rounded.PlayArrow, tr("Play", "Çal"), onPlay, Modifier.weight(1f))
+        PillButton(Icons.Rounded.Shuffle, tr("Shuffle", "Karıştır"), onShuffle, Modifier.weight(1f))
     }
 }
 
@@ -477,7 +478,7 @@ fun DownloadBadge(info: com.enes.liquidtube.download.DownloadInfo) {
     val c = AppTheme.colors
     if (info.isDone) {
         Icon(
-            androidx.compose.material.icons.Icons.Rounded.DownloadDone, "Downloaded",
+            androidx.compose.material.icons.Icons.Rounded.DownloadDone, tr("Downloaded", "İndirildi"),
             tint = c.secondaryLabel, modifier = Modifier.size(16.dp),
         )
     } else {

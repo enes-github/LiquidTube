@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.components
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -113,7 +114,7 @@ fun ScreenScaffold(
         )
         if (onBack != null) {
             GlassIconButton(
-                backdrop, Icons.Rounded.ChevronLeft, "Back", onBack,
+                backdrop, Icons.Rounded.ChevronLeft, tr("Back", "Geri"), onBack,
                 Modifier.statusBarsPadding().padding(start = 14.dp, top = 5.dp),
             )
         }

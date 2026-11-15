@@ -147,14 +147,23 @@ import com.enes.liquidtube.ui.theme.AppTheme
 import com.enes.liquidtube.ui.theme.chromeGlass
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import com.enes.liquidtube.ui.theme.tr
 import kotlin.math.roundToInt
 
-private enum class Tab(val label: String, val icon: ImageVector) {
-    Home("Home", Icons.Rounded.Home),
-    New("New", Icons.Rounded.GridView),
-    Radio("Radio", Icons.Rounded.Sensors),
-    Library("Library", Icons.Rounded.LibraryMusic),
-    Search("Search", Icons.Rounded.Search),
+private enum class Tab(val icon: ImageVector) {
+    Home(Icons.Rounded.Home),
+    New(Icons.Rounded.GridView),
+    Radio(Icons.Rounded.Sensors),
+    Library(Icons.Rounded.LibraryMusic),
+    Search(Icons.Rounded.Search);
+
+        fun label(): String = when (this) {
+        Home -> tr("Home", "Ana Sayfa")
+        New -> tr("New", "Yeni")
+        Radio -> tr("Radio", "Radyo")
+        Library -> tr("Library", "Kitaplık")
+        Search -> tr("Search", "Ara")
+    }
 }
 
 /** Tabs shown inside the capsule; Search has its own round button. */
@@ -193,6 +202,7 @@ fun AppScaffold(connection: PlayerConnection) {
     val atRoot = currentEntry == null || currentEntry?.destination?.route == ROOT
 
     LaunchedEffect(pagerState) { snapshotFlow { pagerState.currentPage }.collect { minimized = false } }
+    LaunchedEffect(current) { if (current == null) minimized = false }
 
     fun selectTab(index: Int) {
         if (index == pagerState.currentPage) {
@@ -206,9 +216,13 @@ fun AppScaffold(connection: PlayerConnection) {
         }
     }
 
-    val scrollConnection = remember {
+    val scrollConnection = remember(current) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (current == null) {
+                    minimized = false
+                    return Offset.Zero
+                }
                 if (available.y < -8f) minimized = true
                 else if (available.y > 8f) minimized = false
                 return Offset.Zero
@@ -624,7 +638,7 @@ private fun GlassTabBar(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        tab.icon, tab.label,
+                        tab.icon, tab.label(),
                         tint = if (pagerState.currentPage < BAR_TABS.size) c.accent else c.label,
                         modifier = Modifier.size(27.dp),
                     )
@@ -745,10 +759,10 @@ private fun TabRow(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        Icon(tab.icon, tab.label, tint = tint, modifier = Modifier.size(27.dp))
+                        Icon(tab.icon, tab.label(), tint = tint, modifier = Modifier.size(27.dp))
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            tab.label,
+                            tab.label(),
                             style = AppTheme.type.caption2.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
                             color = tint,
                         )
@@ -964,10 +978,10 @@ private fun GlassTabRail(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
                         ) {
-                            Icon(tab.icon, tab.label, tint = tint, modifier = Modifier.size(25.dp))
+                            Icon(tab.icon, tab.label(), tint = tint, modifier = Modifier.size(25.dp))
                             Spacer(Modifier.height(1.dp))
                             Text(
-                                tab.label,
+                                tab.label(),
                                 style = AppTheme.type.caption2.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold),
                                 color = tint,
                                 maxLines = 1,

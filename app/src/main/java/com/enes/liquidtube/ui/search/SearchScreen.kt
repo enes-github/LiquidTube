@@ -1,6 +1,7 @@
 package com.enes.liquidtube.ui.search
 
 import androidx.compose.ui.unit.sp
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -78,7 +79,12 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.HorizontalDivider
 import com.enes.liquidtube.ui.glass.glassChip
 
-private data class Category(val name: String, val query: String, val colors: List<Color>)
+private data class Category(private val en: String, val query: String, val colors: List<Color>) {
+    /** Shown on the tile, in the app's language. */
+    val name: String get() = tr(en, CATEGORY_TR[en] ?: en)
+}
+
+private val CATEGORY_TR = mapOf("Pop" to "Pop", "Hip-Hop" to "Hip-Hop", "Chill" to "Sakin", "Rock" to "Rock", "Dance" to "Dans", "Workout" to "Spor", "Focus" to "Odaklanma", "Indie" to "Indie", "Jazz" to "Caz", "Turkish" to "Türkçe", "Classical" to "Klasik", "R&B" to "R&B", "Party" to "Parti", "Romance" to "Romantik", "Sleep" to "Uyku", "Feel Good" to "Keyifli")
 
 private val categories = listOf(
     Category("Pop", "pop hits", listOf(Color(0xFFFF2D92), Color(0xFFFF6B6B))),
@@ -159,7 +165,7 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
     val noResults = !state.isLoading && state.query.trim().length >= 2 &&
         (if (filtering) state.filtered.isEmpty() else state.results.isEmpty)
 
-    ScreenScaffold("Search", state = listState) {
+    ScreenScaffold(tr("Search", "Ara"), state = listState) {
         item(key = "field") {
             SearchField(
                 value = fieldText,
@@ -181,7 +187,7 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
                 FilterChips(
                     options = SearchFilter.entries,
                     selected = state.filter,
-                    label = { it.label },
+                    label = { it.localizedLabel() },
                     onSelect = viewModel::setFilter,
                     modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
                 )
@@ -189,7 +195,7 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
         }
 
         if (!showCategories && state.filter == SearchFilter.All && libraryHits.isNotEmpty()) {
-            item(key = "lib-header") { SectionHeader("In Your Library") }
+            item(key = "lib-header") { SectionHeader(tr("In Your Library", "Kitaplığınızda")) }
             itemsIndexed(libraryHits, key = { _, h -> "lib-${h.song.id}" }) { i, hit ->
                 LibraryHitRow(hit, showDivider = i != libraryHits.lastIndex) {
                     keyboard?.hide()
@@ -206,9 +212,9 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
                             Modifier.fillMaxWidth().padding(start = Gutter, end = Gutter - 6.dp, top = 22.dp, bottom = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text("Recently Searched", style = AppTheme.type.title3, color = c.label, modifier = Modifier.weight(1f))
+                            Text(tr("Recently Searched", "Son Aramalar"), style = AppTheme.type.title3, color = c.label, modifier = Modifier.weight(1f))
                             Text(
-                                "Clear",
+                                tr("Clear", "Temizle"),
                                 style = AppTheme.type.subhead,
                                 color = c.accent,
                                 modifier = Modifier.clickable { viewModel.clearHistory() }.padding(6.dp),
@@ -233,7 +239,7 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
                         }
                     }
                 }
-                item { SectionHeader("Browse Categories") }
+                item { SectionHeader(tr("Browse Categories", "Kategorilere Göz Atın")) }
                 itemsIndexed(categories.chunked(gridAcross)) { row, pair ->
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = Gutter, vertical = 6.dp).appear(row),
@@ -251,12 +257,12 @@ fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
             state.isLoading && (filtering || state.results.isEmpty) -> item { LoadingBox() }
             state.error != null -> item {
                 EmptyState(
-                    Icons.Rounded.WifiOff, "Couldn't search",
-                    state.error ?: "", action = "Try Again" to { viewModel.searchNow() },
+                    Icons.Rounded.WifiOff, tr("Couldn't search", "Arama yapılamadı"),
+                    state.error ?: "", action = tr("Try Again", "Tekrar Deneyin") to { viewModel.searchNow() },
                 )
             }
             noResults -> item {
-                EmptyState(Icons.Rounded.SearchOff, "No Results", "Try a new search or another filter.")
+                EmptyState(Icons.Rounded.SearchOff, tr("No Results", "Sonuç Bulunamadı"), tr("Try a new search or another filter.", "Yeni bir arama veya başka bir filtre deneyin."))
             }
             filtering -> filteredResults(
                 state.filtered,
@@ -300,22 +306,22 @@ private fun LazyListScope.searchResults(
     onSeeAll: (SearchFilter) -> Unit,
 ) {
     if (r.topSong != null || r.topCollection != null) {
-        item { SectionHeader("Top Result") }
+        item { SectionHeader(tr("Top Result", "En İyi Sonuç")) }
         item {
             r.topCollection?.let { TopCollection(it) { onCollection(it) } }
                 ?: r.topSong?.let { SongRow(it, onClick = { onSong(it) }, showDivider = false) }
         }
     }
     if (r.songs.isNotEmpty()) {
-        item { SectionHeader("Songs", onClick = { onSeeAll(SearchFilter.Songs) }) }
+        item { SectionHeader(tr("Songs", "Şarkılar"), onClick = { onSeeAll(SearchFilter.Songs) }) }
         val songs = r.songs.take(8)
         itemsIndexed(songs, key = { _, s -> "song-${s.id}" }) { i, song ->
             SongRow(song, onClick = { onSong(song) }, showDivider = i != songs.lastIndex)
         }
     }
-    if (r.artists.isNotEmpty()) item { CollectionShelf("Artists", r.artists, onHeaderClick = { onSeeAll(SearchFilter.Artists) }) }
-    if (r.albums.isNotEmpty()) item { CollectionShelf("Albums", r.albums, onHeaderClick = { onSeeAll(SearchFilter.Albums) }) }
-    if (r.playlists.isNotEmpty()) item { CollectionShelf("Playlists", r.playlists, onHeaderClick = { onSeeAll(SearchFilter.Playlists) }) }
+    if (r.artists.isNotEmpty()) item { CollectionShelf(tr("Artists", "Sanatçılar"), r.artists, onHeaderClick = { onSeeAll(SearchFilter.Artists) }) }
+    if (r.albums.isNotEmpty()) item { CollectionShelf(tr("Albums", "Albümler"), r.albums, onHeaderClick = { onSeeAll(SearchFilter.Albums) }) }
+    if (r.playlists.isNotEmpty()) item { CollectionShelf(tr("Playlists", "Çalma Listeleri"), r.playlists, onHeaderClick = { onSeeAll(SearchFilter.Playlists) }) }
 }
 
 @Composable
@@ -375,7 +381,7 @@ private fun SearchField(
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             if (value.isEmpty()) {
                 Text(
-                    "Artists, Songs, Lyrics, and More",
+                    tr("Artists, Songs, Lyrics, and More", "Sanatçı, Şarkı, Söz ve Dahası"),
                     style = AppTheme.type.body,
                     color = c.secondaryLabel,
                     maxLines = 1,
@@ -402,6 +408,16 @@ private fun SearchField(
             )
         }
     }
+}
+
+private fun SearchFilter.localizedLabel(): String = when (this) {
+    SearchFilter.All -> tr("Top Results", "Tüm Sonuçlar")
+    SearchFilter.Songs -> tr("Songs", "Şarkılar")
+    SearchFilter.Albums -> tr("Albums", "Albümler")
+    SearchFilter.Artists -> tr("Artists", "Sanatçılar")
+    SearchFilter.Playlists -> tr("Playlists", "Çalma Listeleri")
+    SearchFilter.Community -> tr("Community Playlists", "Topluluk Listeleri")
+    SearchFilter.Videos -> tr("Videos", "Videolar")
 }
 
 @Composable

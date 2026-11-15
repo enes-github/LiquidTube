@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.components
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -215,7 +216,7 @@ fun LazyListScope.feedShelves(
             mixPattern.containsMatchIn(sh.title) ||
                 (sh.collections.size >= 3 && sh.collections.count { mixPattern.containsMatchIn(it.title) } >= sh.collections.size / 2)
         }
-        mixes.mapIndexed { i, m -> if (i == 0) m.copy(title = "Made for You") else m } + rest
+        mixes.mapIndexed { i, m -> if (i == 0) m.copy(title = tr("Made for You", "Sizin İçin")) else m } + rest
     } else shelves
     ordered.forEachIndexed { index, shelf ->
         val key = "shelf-$index-${shelf.title}"
@@ -413,7 +414,7 @@ fun SongMenuButton(song: SongItem, modifier: Modifier = Modifier, extra: List<Me
             .menuButton { menus.song(song, extra) },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Rounded.MoreHoriz, "More", tint = AppTheme.colors.secondaryLabel, modifier = Modifier.size(22.dp))
+        Icon(Icons.Rounded.MoreHoriz, tr("More", "Daha Fazla"), tint = AppTheme.colors.secondaryLabel, modifier = Modifier.size(22.dp))
     }
 }
 

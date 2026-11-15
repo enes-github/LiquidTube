@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.player
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.rounded.History
@@ -269,7 +270,7 @@ fun NowPlayingScreen(
     }
     val translateButton: @Composable () -> Unit = {
         CircleButton(
-            Icons.Rounded.Translate, if (translateOn) "Hide Translation" else "Translate",
+            Icons.Rounded.Translate, if (translateOn) tr("Hide Translation", "Çeviriyi Gizle") else tr("Translate", "Çevir"),
             modifier = Modifier.graphicsLayer { alpha = if (translateOn) 1f else 0.55f },
             onClick = { connection.settings.setTranslateLyrics(!translateOn) },
         )
@@ -328,7 +329,7 @@ fun NowPlayingScreen(
                 val lyricsButtons: @Composable () -> Unit = {
                     if (lyrics != null) {
                         translateButton()
-                        CircleButton(Icons.Rounded.Share, "Share Lyrics", onClick = {
+                        CircleButton(Icons.Rounded.Share, tr("Share Lyrics", "Sözleri Paylaş"), onClick = {
                             val l = lyrics
                             val synced = l?.synced
                             val i = synced?.indexOfLast { it.timeMs <= positionMs + 300 }?.coerceAtLeast(0) ?: 0
@@ -449,12 +450,12 @@ fun NowPlayingScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         ToggleIcon(
-                                            Icons.Rounded.FormatQuote, "Lyrics", mode == PanelMode.Lyrics, topColor,
+                                            Icons.Rounded.FormatQuote, tr("Lyrics", "Sözler"), mode == PanelMode.Lyrics, topColor,
                                             dimmed = !lyricsLoading && lyrics == null,
                                         ) { mode = if (mode == PanelMode.Lyrics) PanelMode.Artwork else PanelMode.Lyrics }
-                                        ToggleIcon(Icons.Rounded.Airplay, "Output", false, topColor) { openOutputSwitcher(context) }
+                                        ToggleIcon(Icons.Rounded.Airplay, tr("Output", "Çıkış"), false, topColor) { openOutputSwitcher(context) }
                                         ToggleIcon(
-                                            Icons.AutoMirrored.Rounded.QueueMusic, "Playing Next", mode == PanelMode.Queue, topColor,
+                                            Icons.AutoMirrored.Rounded.QueueMusic, tr("Playing Next", "Sıradaki"), mode == PanelMode.Queue, topColor,
                                         ) { mode = if (mode == PanelMode.Queue) PanelMode.Artwork else PanelMode.Queue }
                                     }
                                 }
@@ -557,7 +558,7 @@ fun NowPlayingScreen(
                             CompactHeader(current, isFavorite, toggleFavorite, headerArt) {
                                 if (lyrics != null) {
                                     translateButton()
-                                    CircleButton(Icons.Rounded.Share, "Share Lyrics", onClick = {
+                                    CircleButton(Icons.Rounded.Share, tr("Share Lyrics", "Sözleri Paylaş"), onClick = {
                                         val l = lyrics
                                         val synced = l?.synced
                                         val i = synced?.indexOfLast { it.timeMs <= positionMs + 300 }?.coerceAtLeast(0) ?: 0
@@ -568,7 +569,7 @@ fun NowPlayingScreen(
                                     Spacer(Modifier.width(10.dp))
                                     CircleButton(
                                         if (lyricsFull) Icons.Rounded.CloseFullscreen else Icons.Rounded.OpenInFull,
-                                        if (lyricsFull) "Exit Full Screen" else "Full Screen",
+                                        if (lyricsFull) tr("Exit Full Screen", "Tam Ekrandan Çık") else tr("Full Screen", "Tam Ekran"),
                                         onClick = { lyricsFull = !lyricsFull },
                                     )
                                     Spacer(Modifier.width(10.dp))
@@ -624,12 +625,12 @@ fun NowPlayingScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     ToggleIcon(
-                        Icons.Rounded.FormatQuote, "Lyrics", mode == PanelMode.Lyrics, topColor,
+                        Icons.Rounded.FormatQuote, tr("Lyrics", "Sözler"), mode == PanelMode.Lyrics, topColor,
                         dimmed = !lyricsLoading && lyrics == null,
                     ) { mode = if (mode == PanelMode.Lyrics) PanelMode.Artwork else PanelMode.Lyrics }
-                    ToggleIcon(Icons.Rounded.Airplay, "Output", false, topColor) { openOutputSwitcher(context) }
+                    ToggleIcon(Icons.Rounded.Airplay, tr("Output", "Çıkış"), false, topColor) { openOutputSwitcher(context) }
                     ToggleIcon(
-                        Icons.AutoMirrored.Rounded.QueueMusic, "Playing Next", mode == PanelMode.Queue, topColor,
+                        Icons.AutoMirrored.Rounded.QueueMusic, tr("Playing Next", "Sıradaki"), mode == PanelMode.Queue, topColor,
                     ) { mode = if (mode == PanelMode.Queue) PanelMode.Artwork else PanelMode.Queue }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -770,37 +771,37 @@ private fun SongMoreMenu(song: SongItem, connection: PlayerConnection, onCollaps
     val soundCheck by connection.settings.soundCheck.collectAsStateWithLifecycle()
     // Tap opens the menu; hold opens it too and lets you steer it like a joystick.
     CircleButton(
-        Icons.Rounded.MoreHoriz, "More",
+        Icons.Rounded.MoreHoriz, tr("More", "Daha Fazla"),
         modifier = Modifier.onGloballyPositioned { coords = it }.menuButton(Offset(0f, 40f)) {
             val at = coords?.localToRoot(Offset(0f, 40f)) ?: Offset.Zero
 
             val sleepLabel = when {
-                sleepAt == null -> "Sleep Timer"
-                sleepAt == -1L -> "Sleep Timer: End of Song"
-                else -> "Sleep Timer: ${((sleepAt!! - System.currentTimeMillis()) / 60_000L + 1).coerceAtLeast(1)} min"
+                sleepAt == null -> tr("Sleep Timer", "Uyku Zamanlayıcısı")
+                sleepAt == -1L -> tr("Sleep Timer: End of Song", "Uyku Zamanlayıcısı: Şarkı Sonu")
+                else -> tr("Sleep Timer", "Uyku Zamanlayıcısı") + ": ${((sleepAt!! - System.currentTimeMillis()) / 60_000L + 1).coerceAtLeast(1)} " + tr("min", "dk")
             }
             val extra = listOf(
                 MenuAction(sleepLabel, Icons.Rounded.Bedtime) {
                     overlay.showMenu(
                         com.enes.liquidtube.ui.components.MenuSpec(
-                            title = "Sleep Timer",
-                            subtitle = "Pause playback after",
+                            title = tr("Sleep Timer", "Uyku Zamanlayıcısı"),
+                            subtitle = tr("Pause playback after", "Şu süre sonra durdur"),
                             groups = listOf(
-                                listOf(15, 30, 45, 60).map { m -> MenuAction("$m minutes", Icons.Rounded.Timer) { connection.setSleepTimer(m) } } +
-                                    MenuAction("End of This Song", Icons.Rounded.MusicNote) { connection.setSleepTimer(0) },
-                            ) + if (sleepAt != null) listOf(listOf(MenuAction("Turn Off", Icons.Rounded.TimerOff, destructive = true) { connection.setSleepTimer(null) })) else emptyList(),
+                                listOf(15, 30, 45, 60).map { m -> MenuAction(tr("$m minutes", "$m dakika"), Icons.Rounded.Timer) { connection.setSleepTimer(m) } } +
+                                    MenuAction(tr("End of This Song", "Bu Şarkının Sonu"), Icons.Rounded.MusicNote) { connection.setSleepTimer(0) },
+                            ) + if (sleepAt != null) listOf(listOf(MenuAction(tr("Turn Off", "Kapat"), Icons.Rounded.TimerOff, destructive = true) { connection.setSleepTimer(null) })) else emptyList(),
                         ),
                         at,
                     )
                 },
 MenuAction(
-                    "Equalizer: " + (com.enes.liquidtube.playback.AudioFx.PRESETS.firstOrNull { it.id == eq }?.label ?: "Off"),
+                    "Equalizer: " + (com.enes.liquidtube.playback.AudioFx.PRESETS.firstOrNull { it.id == eq }?.label ?: tr("Off", "Kapalı")),
                     Icons.Rounded.GraphicEq,
                 ) {
                     overlay.showMenu(
                         com.enes.liquidtube.ui.components.MenuSpec(
-                            title = "Equalizer",
-                            subtitle = if (soundCheck) "Sound Check is on" else null,
+                            title = tr("Equalizer", "Ekolayzır"),
+                            subtitle = if (soundCheck) tr("Sound Check is on", "Ses Dengeleme açık") else null,
                             groups = listOf(
                                 com.enes.liquidtube.playback.AudioFx.PRESETS.map { p ->
                                     MenuAction(if (p.id == eq) "${p.label}  ✓" else p.label, Icons.Rounded.GraphicEq) {
@@ -808,7 +809,7 @@ MenuAction(
                                     }
                                 },
                                 listOf(
-                                    MenuAction(if (soundCheck) "Sound Check  ✓" else "Sound Check", Icons.Rounded.Equalizer) {
+                                    MenuAction(if (soundCheck) tr("Sound Check  ✓", "Ses Dengeleme  ✓") else tr("Sound Check", "Ses Dengeleme"), Icons.Rounded.Equalizer) {
                                         connection.settings.setSoundCheck(!soundCheck)
                                     },
                                 ),
@@ -817,10 +818,10 @@ MenuAction(
                         at,
                     )
                 },
-                MenuAction(if (speed == 1f) "Playback Speed" else "Playback Speed: ${speed}×", Icons.Rounded.Speed) {
+                MenuAction(if (speed == 1f) tr("Playback Speed", "Çalma Hızı") else tr("Playback Speed: ${speed}×", "Çalma Hızı: ${speed}×"), Icons.Rounded.Speed) {
                     overlay.showMenu(
                         com.enes.liquidtube.ui.components.MenuSpec(
-                            title = "Playback Speed",
+                            title = tr("Playback Speed", "Çalma Hızı"),
                             groups = listOf(
                                 listOf(0.75f, 1f, 1.25f, 1.5f, 2f).map { v ->
                                     MenuAction(if (v == speed) "${v}×  ✓" else "${v}×", Icons.Rounded.Speed) { connection.setSpeed(v) }
@@ -920,7 +921,7 @@ private fun LandscapeHeader(
         }
         Spacer(Modifier.width(12.dp))
         extra()
-        CircleButton(if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline, "Favorite", onClick = onFavorite)
+        CircleButton(if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline, tr("Favorite", "Favori"), onClick = onFavorite)
     }
 }
 
@@ -999,7 +1000,7 @@ private fun TitleRow(
             )
         }
         Spacer(Modifier.width(12.dp))
-        CircleButton(if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline, "Favorite", onClick = onFavorite)
+        CircleButton(if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline, tr("Favorite", "Favori"), onClick = onFavorite)
         Spacer(Modifier.width(12.dp))
         trailing()
     }
@@ -1022,7 +1023,7 @@ private fun CompactHeader(
         }
         Spacer(Modifier.width(12.dp))
         extra()
-        CircleButton(if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline, "Favorite", onClick = onFavorite)
+        CircleButton(if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline, tr("Favorite", "Favori"), onClick = onFavorite)
     }
 }
 
@@ -1162,14 +1163,14 @@ private fun Transport(
         val compact = LocalCompactControls.current
         val side = if (compact) 42.dp else 54.dp
         val main = if (compact) 56.dp else 74.dp
-        TransportButton(Icons.Rounded.FastRewind, "Previous", side, onPrevious)
+        TransportButton(Icons.Rounded.FastRewind, tr("Previous", "Önceki"), side, onPrevious)
         TransportButton(
             if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-            if (isPlaying) "Pause" else "Play",
+            if (isPlaying) tr("Pause", "Duraklat") else tr("Play", "Çal"),
             main,
             onToggle,
         )
-        TransportButton(Icons.Rounded.FastForward, "Next", side, onNext)
+        TransportButton(Icons.Rounded.FastForward, tr("Next", "Sonraki"), side, onNext)
     }
 }
 
@@ -1325,28 +1326,28 @@ private fun QueuePanel(
     Column(Modifier.fillMaxSize()) {
         // iOS 26: three glass capsules.
         Row(Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            QueueToggle(Icons.Rounded.Shuffle, "Shuffle", shuffle, accent, Modifier.weight(1f)) { connection.toggleShuffle() }
+            QueueToggle(Icons.Rounded.Shuffle, tr("Shuffle", "Karıştır"), shuffle, accent, Modifier.weight(1f)) { connection.toggleShuffle() }
             QueueToggle(
                 if (repeatMode == Player.REPEAT_MODE_ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-                "Repeat", repeatMode != Player.REPEAT_MODE_OFF, accent, Modifier.weight(1f),
+                tr("Repeat", "Tekrarla"), repeatMode != Player.REPEAT_MODE_OFF, accent, Modifier.weight(1f),
             ) { connection.cycleRepeat() }
-            QueueToggle(Icons.Rounded.AllInclusive, "Autoplay", autoplay, accent, Modifier.weight(1f)) { connection.toggleAutoplay() }
+            QueueToggle(Icons.Rounded.AllInclusive, tr("Autoplay", "Otomatik Oynat"), autoplay, accent, Modifier.weight(1f)) { connection.toggleAutoplay() }
         }
         Row(verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
-                Text("Playing Next", style = AppTheme.type.headline, color = Color.White)
+                Text(tr("Playing Next", "Sıradaki"), style = AppTheme.type.headline, color = Color.White)
                 Text(
                     when {
-                        upNext.isEmpty() && autoplay -> "Autoplay will keep the music going"
-                        upNext.isEmpty() -> "Nothing queued"
-                        else -> "${upNext.size} songs"
+                        upNext.isEmpty() && autoplay -> tr("Autoplay will keep the music going", "Otomatik Oynatma müziği sürdürecek")
+                        upNext.isEmpty() -> tr("Nothing queued", "Sırada bir şey yok")
+                        else -> tr("${upNext.size} songs", "${upNext.size} şarkı")
                     },
                     style = AppTheme.type.footnote, color = Dim,
                 )
             }
             if (upNext.isNotEmpty()) {
                 Text(
-                    "Clear",
+                    tr("Clear", "Temizle"),
                     style = AppTheme.type.subhead.copy(fontWeight = FontWeight.SemiBold),
                     color = LocalTint.current,
                     modifier = Modifier.clip(CircleShape).clickable { connection.clearUpNext() }.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -1370,10 +1371,10 @@ private fun QueuePanel(
                         ) {
                             Icon(Icons.Rounded.History, null, tint = Dim, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("History", style = AppTheme.type.subhead.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
+                            Text(tr("History", "Geçmiş"), style = AppTheme.type.subhead.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
                             Spacer(Modifier.width(6.dp))
                             Text("${history.size}", style = AppTheme.type.subhead, color = Dim, modifier = Modifier.weight(1f))
-                            Text(if (showHistory) "Hide" else "Show", style = AppTheme.type.subhead.copy(fontWeight = FontWeight.SemiBold), color = LocalTint.current)
+                            Text(if (showHistory) tr("Hide", "Gizle") else tr("Show", "Göster"), style = AppTheme.type.subhead.copy(fontWeight = FontWeight.SemiBold), color = LocalTint.current)
                         }
                     }
                     if (showHistory) {
@@ -1499,14 +1500,14 @@ private fun QueuePanel(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Removed \u201C${gone.song.title}\u201D",
+                        tr("Removed \u201C${gone.song.title}\u201D", "“${gone.song.title}” kaldırıldı"),
                         style = AppTheme.type.subhead, color = Color.White,
                         maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.widthIn(max = 200.dp),
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "Undo",
+                        tr("Undo", "Geri Al"),
                         style = AppTheme.type.subhead.copy(fontWeight = FontWeight.Bold),
                         color = LocalTint.current,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1590,7 +1591,7 @@ private fun SwipeToRemove(enabled: Boolean, onRemove: () -> Unit, content: @Comp
                 contentAlignment = Alignment.Center,
             ) {
                 if (revealed > revealPx * 0.6f) {
-                    Text("Remove", style = AppTheme.type.subhead.copy(fontWeight = FontWeight.SemiBold), color = Color.White, maxLines = 1)
+                    Text(tr("Remove", "Kaldır"), style = AppTheme.type.subhead.copy(fontWeight = FontWeight.SemiBold), color = Color.White, maxLines = 1)
                 }
             }
         }
@@ -1624,7 +1625,7 @@ private fun QueueRow(song: SongItem, modifier: Modifier, onClick: () -> Unit, ha
             }
         }
         if (showHandle) Box(handle.size(width = 52.dp, height = QueueRowHeight), contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.DragHandle, "Reorder", tint = Dim, modifier = Modifier.size(24.dp))
+            Icon(Icons.Rounded.DragHandle, tr("Reorder", "Sırala"), tint = Dim, modifier = Modifier.size(24.dp))
         }
     }
 }
@@ -1665,7 +1666,7 @@ private fun LyricsPanel(
             CircularProgressIndicator(color = Dim, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
         }
         lyrics == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Lyrics aren’t available for this song.", style = AppTheme.type.body, color = Dim)
+            Text(tr("Lyrics aren’t available for this song.", "Bu şarkının sözleri yok."), style = AppTheme.type.body, color = Dim)
         }
         synced != null -> SyncedLyrics(synced, positionMs, onSeek, lyrics.source, onShare, translations)
         else -> LazyColumn(Modifier.fillMaxSize().fadingEdges()) {
@@ -1811,7 +1812,7 @@ private fun karaoke(text: String, start: Long, end: Long, pos: Long): androidx.c
 @Composable
 private fun LyricsSource(source: String) {
     Text(
-        "Lyrics from $source",
+        tr("Lyrics from $source", "Sözler: $source"),
         style = AppTheme.type.footnote,
         color = Dim,
         modifier = Modifier.padding(top = 24.dp),

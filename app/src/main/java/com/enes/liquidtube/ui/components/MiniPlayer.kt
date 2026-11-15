@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.components
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.animation.core.spring
@@ -122,12 +123,12 @@ fun MiniPlayer(
             } else {
                 MiniButton(
                     if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                    if (isPlaying) "Pause" else "Play",
+                    if (isPlaying) tr("Pause", "Duraklat") else tr("Play", "Çal"),
                     size = 34.dp,
                 ) { connection.togglePlayPause() }
             }
             if (!compact) {
-                MiniButton(Icons.Rounded.FastForward, "Next", size = 32.dp) { connection.skipNext() }
+                MiniButton(Icons.Rounded.FastForward, tr("Next", "Sonraki"), size = 32.dp) { connection.skipNext() }
             }
         }
     }

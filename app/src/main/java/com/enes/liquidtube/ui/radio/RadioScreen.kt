@@ -63,6 +63,8 @@ import com.enes.liquidtube.ui.home.AccountButton
 import com.enes.liquidtube.ui.theme.AppTheme
 import com.enes.innertube.models.SongItem
 
+import com.enes.liquidtube.ui.theme.tr
+
 private data class Station(
     val name: String,
     val tagline: String,
@@ -71,21 +73,23 @@ private data class Station(
     val icon: ImageVector = Icons.Rounded.Sensors,
 )
 
-private val featured = listOf(
-    Station("Hits Radio", "The biggest songs right now", "top hits this week", listOf(Color(0xFFFA2D48), Color(0xFFFF8A3D)), Icons.Rounded.LocalFireDepartment),
-    Station("Chill Radio", "Relax and unwind", "chill lofi", listOf(Color(0xFF3B5BDB), Color(0xFF5FD4F4)), Icons.Rounded.Headphones),
-    Station("Throwback Radio", "Hits from the 2000s & 2010s", "2010s throwback hits", listOf(Color(0xFFFF9500), Color(0xFFFFCC00)), Icons.Rounded.Album),
+@Composable
+private fun featuredStations() = listOf(
+    Station(tr("Hits Radio", "Hit Radyo"), tr("The biggest songs right now", "Şu an en popüler şarkılar"), "top hits this week", listOf(Color(0xFFFA2D48), Color(0xFFFF8A3D)), Icons.Rounded.LocalFireDepartment),
+    Station(tr("Chill Radio", "Sakin Radyo"), tr("Relax and unwind", "Rahatlatıcı ve dinlendirici"), "chill lofi", listOf(Color(0xFF3B5BDB), Color(0xFF5FD4F4)), Icons.Rounded.Headphones),
+    Station(tr("Throwback Radio", "Nostalji Radyosu"), tr("Hits from the 2000s & 2010s", "2000\'ler ve 2010\'ların hitleri"), "2010s throwback hits", listOf(Color(0xFFFF9500), Color(0xFFFFCC00)), Icons.Rounded.Album),
 )
 
-private val genres = listOf(
-    Station("Pop", "", "pop hits", listOf(Color(0xFFFF2D92), Color(0xFFFF6477)), Icons.Rounded.MusicNote),
-    Station("Hip-Hop", "", "hip hop hits", listOf(Color(0xFF8E2DE2), Color(0xFFFA2D48)), Icons.Rounded.Bolt),
-    Station("Rock", "", "rock classics", listOf(Color(0xFF3A3A3C), Color(0xFF8E8E93)), Icons.Rounded.Album),
-    Station("Electronic", "", "electronic dance hits", listOf(Color(0xFF00B4DB), Color(0xFF0083B0)), Icons.Rounded.Sensors),
-    Station("R&B", "", "rnb hits", listOf(Color(0xFF7F00FF), Color(0xFFE100FF)), Icons.Rounded.Headphones),
-    Station("Jazz", "", "jazz classics", listOf(Color(0xFF1D976C), Color(0xFF93F9B9)), Icons.Rounded.Piano),
-    Station("Party", "", "party hits", listOf(Color(0xFFF7971E), Color(0xFFFFD200)), Icons.Rounded.Celebration),
-    Station("Workout", "", "workout motivation", listOf(Color(0xFFED213A), Color(0xFF93291E)), Icons.Rounded.FitnessCenter),
+@Composable
+private fun genreStations() = listOf(
+    Station(tr("Pop", "Pop"), "", "pop hits", listOf(Color(0xFFFF2D92), Color(0xFFFF6477)), Icons.Rounded.MusicNote),
+    Station(tr("Hip-Hop", "Hip-Hop"), "", "hip hop hits", listOf(Color(0xFF8E2DE2), Color(0xFFFA2D48)), Icons.Rounded.Bolt),
+    Station(tr("Rock", "Rock"), "", "rock classics", listOf(Color(0xFF3A3A3C), Color(0xFF8E8E93)), Icons.Rounded.Album),
+    Station(tr("Electronic", "Elektronik"), "", "electronic dance hits", listOf(Color(0xFF00B4DB), Color(0xFF0083B0)), Icons.Rounded.Sensors),
+    Station(tr("R&B", "R&B"), "", "rnb hits", listOf(Color(0xFF7F00FF), Color(0xFFE100FF)), Icons.Rounded.Headphones),
+    Station(tr("Jazz", "Caz"), "", "jazz classics", listOf(Color(0xFF1D976C), Color(0xFF93F9B9)), Icons.Rounded.Piano),
+    Station(tr("Party", "Parti"), "", "party hits", listOf(Color(0xFFF7971E), Color(0xFFFFD200)), Icons.Rounded.Celebration),
+    Station(tr("Workout", "Spor"), "", "workout motivation", listOf(Color(0xFFED213A), Color(0xFF93291E)), Icons.Rounded.FitnessCenter),
 )
 
 @Composable
@@ -95,8 +99,10 @@ fun RadioScreen() {
     val recents by connection.library.recents.collectAsStateWithLifecycle()
     // One personal station per recently played artist.
     val personal = recents.distinctBy { it.artists.substringBefore(",").substringBefore(" & ").trim() }.take(10)
+    val featured = featuredStations()
+    val genres = genreStations()
 
-    ScreenScaffold("Radio", trailing = { AccountButton() }) {
+    ScreenScaffold(tr("Radio", "Radyo"), trailing = { AccountButton() }) {
         item(key = "featured") {
             BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 8.dp).appear(0)) {
                 val cardWidth = phoneWidth(maxWidth) - Gutter * 2 - 20.dp
@@ -116,7 +122,7 @@ fun RadioScreen() {
         if (personal.isNotEmpty()) {
             item(key = "personal") {
                 Column(Modifier.appear(1)) {
-                    SectionHeader("Stations for You")
+                    SectionHeader(tr("Stations for You", "Sizin İçin Radyolar"))
                     BoxWithConstraints(Modifier.fillMaxWidth()) {
                         val cardWidth = (phoneWidth(maxWidth) - Gutter - 12.dp * 2) / 2.2f
                         LazyRow(
@@ -132,7 +138,7 @@ fun RadioScreen() {
             }
         }
 
-        item(key = "genres-header") { Box(Modifier.appear(2)) { SectionHeader("Genre Stations") } }
+        item(key = "genres-header") { Box(Modifier.appear(2)) { SectionHeader(tr("Genre Stations", "Tür Radyoları")) } }
         genres.chunked(gridAcross).forEachIndexed { row, pair ->
             item(key = "genres-$row") {
                 Row(
@@ -156,7 +162,7 @@ private fun FeaturedStationCard(station: Station, modifier: Modifier, onClick: (
     val c = AppTheme.colors
     Column(modifier.pressMenu(onClick = onClick, menu = null)) {
         Text(
-            "RADIO STATION",
+            tr("RADIO STATION", "RADYO İSTASYONU"),
             style = AppTheme.type.caption.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp),
             color = c.secondaryLabel,
         )
@@ -190,7 +196,7 @@ private fun FeaturedStationCard(station: Station, modifier: Modifier, onClick: (
                     .background(Color.White.copy(alpha = 0.25f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Rounded.PlayArrow, "Play", tint = Color.White, modifier = Modifier.size(28.dp))
+                Icon(Icons.Rounded.PlayArrow, tr("Play", "Çal"), tint = Color.White, modifier = Modifier.size(28.dp))
             }
         }
     }
@@ -235,13 +241,13 @@ private fun PersonalStationCard(song: SongItem, modifier: Modifier, onClick: () 
         }
         Spacer(Modifier.height(7.dp))
         Text(
-            "$artist Station",
+            tr("$artist Station", "$artist Radyosu"),
             style = AppTheme.type.footnote.copy(fontWeight = FontWeight.Medium),
             color = c.label,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text("Based on “${song.title}”", style = AppTheme.type.footnote, color = c.secondaryLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(tr("Based on “${song.title}”", "“${song.title}” parçasına dayalı"), style = AppTheme.type.footnote, color = c.secondaryLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

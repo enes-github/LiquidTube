@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.browse
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.enes.liquidtube.data.AuthStore
@@ -27,5 +28,5 @@ class BrowseViewModel @Inject constructor(
 /** The "New" tab: new releases, trending, charts. */
 @Composable
 fun BrowseScreen(viewModel: BrowseViewModel = hiltViewModel()) {
-    FeedScreen("New", viewModel, showRecents = false, style = com.enes.liquidtube.ui.components.FeedStyle.New)
+    FeedScreen(tr("New", "Yeni"), viewModel, showRecents = false, style = com.enes.liquidtube.ui.components.FeedStyle.New)
 }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LiquidTube</string>
+    <string name="downloads_channel">İndirmeler</string>
+    <string name="widget_description">Şu an çalıyor, oynat, atla ve favoriye ekle ile</string>
+    <string name="lyrics_widget_description">Çalınan şarkının sözleri, söylendikçe satır satır gösterilir</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_library">Kitaplık</string>
+    <string name="nav_search">Ara</string>
+    <string name="nav_account">Hesap</string>
+
+    <!-- Account / Settings -->
+    <string name="settings_title">Hesap</string>
+    <string name="settings_language">Dil</string>
+    <string name="settings_language_desc">Uygulama arayüzü ve YouTube Music içerik dili.</string>
+    <string name="settings_language_system">Sistem Varsayılanı</string>
+    <string name="settings_language_tr">Türkçe</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_playback">OYNATMA</string>
+    <string name="settings_data_saver">Veri Tasarrufu</string>
+    <string name="settings_data_saver_desc">Hücresel veriden tasarruf etmek için en düşük kalitede yayınla.</string>
+    <string name="settings_offline_mix">ÇEVRİMDIŞI MİKS</string>
+    <string name="settings_smart_downloads">Akıllı İndirmeler</string>
+    <string name="settings_smart_downloads_desc">Favorilerinizi, beğendiğiniz ve en çok çaldığınız şarkıları otomatik olarak indirir, böylece her zaman çevrimdışı müzik olur.</string>
+    <string name="settings_mix_size">Miks Boyutu</string>
+    <string name="settings_use_mobile_data">Hücresel Veri Kullan</string>
+    <string name="settings_mobile_data_off_desc">Kapalı: Miks yalnızca Wi-Fi üzerinden indirilir.</string>
+    <string name="settings_listening_cache">DİNLEME ÖNBELLEĞİ</string>
+    <string name="settings_clear_cache">Önbelleği Temizle</string>
+    <string name="settings_lyrics">ŞARKI SÖZLERİ</string>
+    <string name="settings_lyrics_lockscreen">Kilit Ekranında Şarkı Sözleri</string>
+    <string name="settings_lyrics_lockscreen_desc">Söylenen satır kilit ekranında ve bildirimde şarkı başlığının altında görünür.</string>
+    <string name="settings_translate_lyrics_to">Şarkı Sözlerini Çevir</string>
+    <string name="settings_translate_lyrics_desc">Her satırın altında bir çeviri göstermek için şarkı sözlerinin üzerindeki çevir butonuna dokunun.</string>
+    <string name="settings_sound">SES</string>
+    <string name="settings_equalizer">Ekolayzer</string>
+    <string name="settings_sound_check">Ses Dengeleme</string>
+    <string name="settings_sound_check_desc">YouTube\'un ses seviyesi verilerini kullanarak her şarkıyı aynı ses seviyesinde çalar.</string>
+    <string name="settings_automatic">OTOMATİK</string>
+    <string name="settings_auto_resume">Otomatik Devam Et</string>
+    <string name="settings_auto_resume_desc">Kulaklık, Bluetooth hoparlör veya arabanızı bağladığınızda kaldığınız yerden devam edin.</string>
+    <string name="settings_release_alerts">Yeni Çıkış Bildirimleri</string>
+    <string name="settings_release_alerts_desc">Takip ettiğiniz sanatçılar yeni bir şey çıkardığında bildirim alın.</string>
+    <string name="settings_stations">RADYOLAR</string>
+    <string name="settings_crossfade">ÇAPRAZ GEÇİŞ</string>
+    <string name="settings_appearance">GÖRÜNÜM</string>
+    <string name="settings_accent_color">Vurgu Rengi</string>
+    <string name="settings_glass_refraction">Cam Kırılması (Refraction)</string>
+    <string name="settings_glass_refraction_desc">Cam kenarlarında ışığı bükün. Düz buzlu cam ve daha uzun pil ömrü için kapatın.</string>
+    <string name="settings_audio_quality">SES KALİTESİ</string>
+    <string name="settings_premium_audio">Premium Ses (256kbps)</string>
+    <string name="settings_backup">YEDEKLEME</string>
+    <string name="settings_online_backup">Çevrimiçi Yedekleme</string>
+    <string name="settings_backup_file">Yedekleme Dosyası</string>
+    <string name="back">Geri</string>
+    <string name="sign_in">Giriş Yap</string>
+    <string name="sign_out">Çıkış Yap</string>
+    <string name="not_signed_in">Giriş yapılmadı</string>
+    <string name="sign_in_google">Google ile Giriş Yap</string>
+</resources>

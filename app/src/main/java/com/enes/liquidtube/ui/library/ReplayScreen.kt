@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.library
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -104,10 +105,10 @@ fun ReplayScreen(onBack: () -> Unit) {
         )
     }
 
-    ScreenScaffold("Replay", onBack = onBack, backdropUrl = songs.firstOrNull()?.thumbnailUrl, backdropGlow = true) {
+    ScreenScaffold(tr("Replay", "Replay"), onBack = onBack, backdropUrl = songs.firstOrNull()?.thumbnailUrl, backdropGlow = true) {
         if (months.isEmpty()) {
             item {
-                EmptyState(Icons.Rounded.Insights, "Your Replay starts now", "Listen for a while and your top songs and artists of the month show up here.")
+                EmptyState(Icons.Rounded.Insights, tr("Your Replay starts now", "Replay'iniz şimdi başlıyor"), tr("Listen for a while and your top songs and artists of the month show up here.", "Biraz dinleyin; ayın en çok dinlenen şarkıları ve sanatçıları burada görünür."))
             }
             return@ScreenScaffold
         }
@@ -134,12 +135,12 @@ fun ReplayScreen(onBack: () -> Unit) {
                 Text(monthLabel(selected ?: "").uppercase(), style = AppTheme.type.caption.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp), color = c.secondaryLabel)
                 Spacer(Modifier.height(6.dp))
                 Text("$totalMin", style = AppTheme.type.largeTitle.copy(fontSize = 48.sp, lineHeight = 52.sp), color = c.accent)
-                Text(if (totalMin == 1L) "minute listened" else "minutes listened", style = AppTheme.type.headline, color = c.label)
+                Text(if (totalMin == 1L) tr("minute listened", "dakika dinlendi") else tr("minutes listened", "dakika dinlendi"), style = AppTheme.type.headline, color = c.label)
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
                     Stat("${topSongs.size}", if (topSongs.size == 1) "song" else "songs", Modifier.width(64.dp))
                     Stat("${artists.size}", if (artists.size == 1) "artist" else "artists", Modifier.width(64.dp))
-                    artists.firstOrNull()?.let { Stat(it.name, "top artist", Modifier.weight(1f)) }
+                    artists.firstOrNull()?.let { Stat(it.name, tr("top artist", "en çok dinlenen"), Modifier.weight(1f)) }
                 }
             }
         }
@@ -157,8 +158,8 @@ fun ReplayScreen(onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Watch Your Replay", style = AppTheme.type.headline, color = androidx.compose.ui.graphics.Color.White)
-                        Text("Your month as a story, ready to share", style = AppTheme.type.footnote, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+                        Text(tr("Watch Your Replay", "Replay'inizi İzleyin"), style = AppTheme.type.headline, color = androidx.compose.ui.graphics.Color.White)
+                        Text(tr("Your month as a story, ready to share", "Ayınız bir hikâye olarak, paylaşmaya hazır"), style = AppTheme.type.footnote, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
                     }
                     Icon(androidx.compose.material.icons.Icons.Rounded.PlayArrow, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(30.dp))
                 }
@@ -166,7 +167,7 @@ fun ReplayScreen(onBack: () -> Unit) {
             item(key = "play") {
                 PlayActionRow(
                     onPlay = { connection.play(songs.take(100)) },
-                    left = SideAction(Icons.Rounded.Shuffle, "Shuffle") { connection.shufflePlay(songs.take(100)) },
+                    left = SideAction(Icons.Rounded.Shuffle, tr("Shuffle", "Karıştır")) { connection.shufflePlay(songs.take(100)) },
                     right = null,
                 )
             }
@@ -174,7 +175,7 @@ fun ReplayScreen(onBack: () -> Unit) {
         if (artists.isNotEmpty()) {
             item(key = "artists") {
                 Column {
-                    SectionHeader("Top Artists")
+                    SectionHeader(tr("Top Artists", "En Çok Dinlenen Sanatçılar"))
                     LazyRow(contentPadding = PaddingValues(horizontal = Gutter), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         itemsIndexed(artists.take(15)) { i, a ->
                             Column(
@@ -192,7 +193,7 @@ fun ReplayScreen(onBack: () -> Unit) {
                                 }
                                 Spacer(Modifier.height(6.dp))
                                 Text(a.name, style = AppTheme.type.footnote.copy(fontWeight = FontWeight.SemiBold), color = c.label, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-                                Text("${a.ms / 60_000} min", style = AppTheme.type.caption, color = c.secondaryLabel)
+                                Text("${a.ms / 60_000} " + tr("min", "dk"), style = AppTheme.type.caption, color = c.secondaryLabel)
                             }
                         }
                     }

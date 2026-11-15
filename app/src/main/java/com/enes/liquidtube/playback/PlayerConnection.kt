@@ -1,5 +1,6 @@
 package com.enes.liquidtube.playback
 
+import com.enes.liquidtube.ui.theme.tr
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
@@ -105,7 +106,7 @@ class PlayerConnection @Inject constructor(
         }
         val added = fillOffline(c, target = 25)
         Log.i(TAG, "Offline: queue switched ($removed removed, $added offline songs added)")
-        if (removed > 0 || added > 0) toast("You’re offline — playing your downloads next")
+        if (removed > 0 || added > 0) toast(tr("You’re offline — playing your downloads next", "Çevrimdışısınız — sırada indirdikleriniz çalacak"))
     }
 
     private fun goOnline(c: MediaController) {
@@ -128,7 +129,7 @@ class PlayerConnection @Inject constructor(
             c.addMediaItems(c.currentMediaItemIndex + 1, restore.map { it.toMediaItem() })
         }
         Log.i(TAG, "Online: queue restored (${restore.size} songs), now playing $currentId")
-        if (restore.isNotEmpty()) toast("Back online — your queue is back")
+        if (restore.isNotEmpty()) toast(tr("Back online — your queue is back", "Tekrar çevrimiçi — sıranız geri geldi"))
         maybeExtendQueue()
     }
 
@@ -236,7 +237,7 @@ class PlayerConnection @Inject constructor(
                         val now = controller ?: return@launch
                         if (!network.online.value) {
                             adaptToConnection(now, false)
-                            if (!skipUnplayable(now)) toast("You’re offline — no downloaded songs to play")
+                            if (!skipUnplayable(now)) toast(tr("You’re offline — no downloaded songs to play", "Çevrimdışısınız — çalacak indirilmiş şarkı yok"))
                         } else {
                             // Still online: a hiccup. Try the same song again.
                             now.prepare()
@@ -247,7 +248,7 @@ class PlayerConnection @Inject constructor(
                 }
             }
             val title = c?.currentMediaItem?.mediaMetadata?.title ?: "this track"
-            Toast.makeText(context, "Couldn't play “$title”", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, tr("Couldn't play “$title”", "“$title” çalınamadı"), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -416,7 +417,7 @@ class PlayerConnection @Inject constructor(
             val tapped = songs.getOrNull(startIndex)
             val playable = songs.filter(::isOffline)
             if (playable.isEmpty() || (tapped != null && tapped !in playable)) {
-                toast("You’re offline — only downloaded songs can play")
+                toast(tr("You’re offline — only downloaded songs can play", "Çevrimdışısınız — yalnızca indirilen şarkılar çalabilir"))
                 if (playable.isEmpty()) return
             }
             if (playable.size != songs.size) {
@@ -534,12 +535,12 @@ class PlayerConnection @Inject constructor(
     fun playNext(song: SongItem) = withController { c ->
         if (c.mediaItemCount == 0) playSong(song)
         else c.addMediaItem(c.currentMediaItemIndex + 1, song.toMediaItem())
-        toast("Playing next")
+        toast(tr("Playing next", "Sıradaki olarak çalacak"))
     }
 
     fun addToQueue(song: SongItem) = withController { c ->
         if (c.mediaItemCount == 0) playSong(song) else c.addMediaItem(song.toMediaItem())
-        toast("Added to queue")
+        toast(tr("Added to queue", "Sıraya eklendi"))
     }
 
     private fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
@@ -549,7 +550,7 @@ class PlayerConnection @Inject constructor(
         scope.launch {
             val first = repository.searchSongs(query).getOrNull()?.firstOrNull()
             if (first != null) playSong(first)
-            else Toast.makeText(context, "Couldn't start station", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(context, tr("Couldn't start station", "İstasyon başlatılamadı"), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -669,7 +670,7 @@ class PlayerConnection @Inject constructor(
     fun setSleepTimer(minutes: Int?) {
         sleepJob?.cancel()
         _sleepAtMs.value = null
-        if (minutes == null) { toast("Sleep timer off"); return }
+        if (minutes == null) { toast(tr("Sleep timer off", "Uyku zamanlayıcısı kapalı")); return }
         if (minutes == 0) {
             _sleepAtMs.value = -1L
             val target = controller?.currentMediaItem?.mediaId
@@ -686,7 +687,7 @@ class PlayerConnection @Inject constructor(
                 }
                 _sleepAtMs.value = null
             }
-            toast("Stopping at the end of this song")
+            toast(tr("Stopping at the end of this song", "Bu şarkının sonunda duracak"))
             return
         }
         val at = System.currentTimeMillis() + minutes * 60_000L
@@ -701,7 +702,7 @@ class PlayerConnection @Inject constructor(
             }
             _sleepAtMs.value = null
         }
-        toast("Sleep timer: $minutes min")
+        toast(tr("Sleep timer: $minutes min", "Uyku zamanlayıcısı: $minutes dk"))
     }
 
     private val _speed = MutableStateFlow(1f)
@@ -762,16 +763,16 @@ class PlayerConnection @Inject constructor(
     fun playCollection(browseId: String, shuffle: Boolean = false) {
         scope.launch {
             val songs = repository.browse(browseId).getOrNull()?.songs.orEmpty()
-            if (songs.isEmpty()) toast("Couldn't load songs") else if (shuffle) shufflePlay(songs) else play(songs)
+            if (songs.isEmpty()) toast(tr("Couldn't load songs", "Şarkılar yüklenemedi")) else if (shuffle) shufflePlay(songs) else play(songs)
         }
     }
 
     fun downloadCollection(browseId: String) {
         scope.launch {
             val songs = repository.browse(browseId).getOrNull()?.songs.orEmpty()
-            if (songs.isEmpty()) toast("Couldn't load songs") else {
+            if (songs.isEmpty()) toast(tr("Couldn't load songs", "Şarkılar yüklenemedi")) else {
                 downloads.download(songs)
-                toast("Downloading ${songs.size} songs")
+                toast(tr("Downloading ${songs.size} songs", "${songs.size} şarkı indiriliyor"))
             }
         }
     }
@@ -789,11 +790,11 @@ class PlayerConnection @Inject constructor(
         scope.launch {
             repository.addToPlaylist(playlistId, songs.map { it.id })
                 .onSuccess {
-                    if (!quiet) toast("Added to \u201C$title\u201D")
+                    if (!quiet) toast(tr("Added to \u201C$title\u201D", "“$title” listesine eklendi"))
                     changed(playlistId)
                     onDone()
                 }
-                .onFailure { toast("Couldn't add to playlist") }
+                .onFailure { toast(tr("Couldn't add to playlist", "Çalma listesine eklenemedi")) }
         }
     }
 
@@ -801,18 +802,18 @@ class PlayerConnection @Inject constructor(
         scope.launch {
             val id = repository.createPlaylist(title, songs.map { it.id }).getOrNull()
             if (id != null) {
-                toast("Created \u201C$title\u201D")
+                toast(tr("Created \u201C$title\u201D", "“$title” oluşturuldu"))
                 onCreated(id)
-            } else toast("Couldn't create playlist")
+            } else toast(tr("Couldn't create playlist", "Çalma listesi oluşturulamadı"))
         }
     }
 
     fun removeFromPlaylist(playlistId: String, song: SongItem, onDone: () -> Unit) {
-        val setId = song.setVideoId ?: return toast("Can't remove this song")
+        val setId = song.setVideoId ?: return toast(tr("Can't remove this song", "Bu şarkı kaldırılamıyor"))
         scope.launch {
             repository.removeFromPlaylist(playlistId, song.id, setId)
-                .onSuccess { toast("Removed"); changed(playlistId); onDone() }
-                .onFailure { toast("Couldn't remove song") }
+                .onSuccess { toast(tr("Removed", "Kaldırıldı")); changed(playlistId); onDone() }
+                .onFailure { toast(tr("Couldn't remove song", "Şarkı kaldırılamadı")) }
         }
     }
 
@@ -820,15 +821,15 @@ class PlayerConnection @Inject constructor(
         scope.launch {
             repository.renamePlaylist(playlistId, name)
                 .onSuccess { onDone() }
-                .onFailure { toast("Couldn't rename playlist") }
+                .onFailure { toast(tr("Couldn't rename playlist", "Çalma listesi yeniden adlandırılamadı")) }
         }
     }
 
     fun deletePlaylist(playlistId: String, onDone: () -> Unit) {
         scope.launch {
             repository.deletePlaylist(playlistId)
-                .onSuccess { toast("Playlist deleted"); onDone() }
-                .onFailure { toast("Couldn't delete playlist") }
+                .onSuccess { toast(tr("Playlist deleted", "Çalma listesi silindi")); onDone() }
+                .onFailure { toast(tr("Couldn't delete playlist", "Çalma listesi silinemedi")) }
         }
     }
 
@@ -839,12 +840,12 @@ class PlayerConnection @Inject constructor(
                 repository.browse(playlistId).getOrNull()?.playlistId
             } else playlistId
             if (id == null) {
-                toast("Couldn't update your library")
+                toast(tr("Couldn't update your library", "Kitaplığınız güncellenemedi"))
                 return@launch
             }
             repository.savePlaylist(id, save)
-                .onSuccess { toast(if (save) "Added to Library" else "Removed from Library") }
-                .onFailure { toast("Couldn't update your library") }
+                .onSuccess { toast(if (save) tr("Added to Library", "Kitaplığa Eklendi") else tr("Removed from Library", "Kitaplıktan Kaldırıldı")) }
+                .onFailure { toast(tr("Couldn't update your library", "Kitaplığınız güncellenemedi")) }
         }
     }
 
@@ -852,8 +853,8 @@ class PlayerConnection @Inject constructor(
     fun followArtist(channelId: String, follow: Boolean, onDone: (Boolean) -> Unit) {
         scope.launch {
             repository.subscribe(channelId, follow)
-                .onSuccess { toast(if (follow) "Following" else "Unfollowed"); onDone(follow) }
-                .onFailure { toast("Couldn't update following"); onDone(!follow) }
+                .onSuccess { toast(if (follow) tr("Following", "Takip ediliyor") else tr("Unfollowed", "Takip bırakıldı")); onDone(follow) }
+                .onFailure { toast(tr("Couldn't update following", "Takip güncellenemedi")); onDone(!follow) }
         }
     }
 
@@ -863,7 +864,7 @@ class PlayerConnection @Inject constructor(
             .putExtra(android.content.Intent.EXTRA_SUBJECT, title)
             .putExtra(android.content.Intent.EXTRA_TEXT, url)
         context.startActivity(
-            android.content.Intent.createChooser(send, "Share").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            android.content.Intent.createChooser(send, tr("Share", "Paylaş")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         )
     }
 
@@ -1012,7 +1013,7 @@ class PlayerConnection @Inject constructor(
         }
         val song = _current.value
         if (song == null) {
-            if (onWidget) widget.update(context, null, null, null, null, "", "Play a song to see its lyrics here", "", null, false)
+            if (onWidget) widget.update(context, null, null, null, null, "", tr("Play a song to see its lyrics here", "Sözlerini burada görmek için bir şarkı çalın"), "", null, false)
             LockScreenLyrics.publish(null)
             return
         }
@@ -1051,7 +1052,7 @@ class PlayerConnection @Inject constructor(
                 Triple("", lines.firstOrNull().orEmpty(), lines.getOrNull(1).orEmpty())
             }
             widgetLyricsJob?.isActive == true -> Triple("", "…", "")
-            else -> Triple("", "No lyrics for this song", "")
+            else -> Triple("", tr("No lyrics for this song", "Bu şarkının sözleri yok"), "")
         }
         if (onWidget) widget.update(context, song.title, song.artists, song.thumbnailUrl, key, prev, line, next, progress, c.isPlaying)
         // Lock screen: only real sung lines (intros and gaps show the artist as usual).

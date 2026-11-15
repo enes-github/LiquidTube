@@ -109,11 +109,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.enes.liquidtube.ui.theme.tr
+
 /** Library list kinds backed by YouTube Music (signed in). */
-enum class LibraryKind(val route: String, val title: String, val browseId: String) {
-    Playlists("playlists", "Playlists", "FEmusic_liked_playlists"),
-    Albums("albums", "Albums", "FEmusic_liked_albums"),
-    Artists("artists", "Artists", "FEmusic_library_corpus_track_artists"),
+enum class LibraryKind(val route: String, val browseId: String) {
+    Playlists("playlists", "FEmusic_liked_playlists"),
+    Albums("albums", "FEmusic_liked_albums"),
+    Artists("artists", "FEmusic_library_corpus_track_artists");
+
+        fun title(): String = when (this) {
+        Playlists -> tr("Playlists", "Çalma Listeleri")
+        Albums -> tr("Albums", "Albümler")
+        Artists -> tr("Artists", "Sanatçılar")
+    }
 }
 
 @Composable
@@ -142,23 +150,23 @@ fun LibraryScreen(onOpenList: (String) -> Unit, onOpenLibrary: (String) -> Unit)
 
     // Pinned cards: real artwork collages, like Apple Music's pinned items.
     val pins = buildList {
-        add(PinCard("Favorite Songs", "${songCount(favorites.size)}", favorites.art(), Icons.Rounded.Star, PinRed) { onOpenList("favorites") })
-        add(PinCard("Recently Played", "${songCount(recents.size)}", recents.art(), Icons.Rounded.History, PinBlue) { onOpenList("recents") })
-        add(PinCard("Replay", "Your month in music", replayArt, Icons.Rounded.Insights, PinOrange) { onOpenList("replay") })
-        if (loggedIn) add(PinCard("Liked Songs", "YouTube Music", emptyList(), Icons.Rounded.Favorite, PinPink) { nav.openCollection("VLLM") })
-        add(PinCard("Downloaded", "${songCount(downloaded.size)}", downloaded.art(), Icons.Rounded.DownloadDone, PinGreen) { onOpenList("downloads") })
+        add(PinCard(tr("Favorite Songs", "Favori Şarkılar"), songCount(favorites.size), favorites.art(), Icons.Rounded.Star, PinRed) { onOpenList("favorites") })
+        add(PinCard(tr("Recently Played", "Son Çalınanlar"), songCount(recents.size), recents.art(), Icons.Rounded.History, PinBlue) { onOpenList("recents") })
+        add(PinCard(tr("Replay", "Replay"), tr("Your month in music", "Aylık müzik özeti"), replayArt, Icons.Rounded.Insights, PinOrange) { onOpenList("replay") })
+        if (loggedIn) add(PinCard(tr("Liked Songs", "Beğenilen Şarkılar"), "YouTube Music", emptyList(), Icons.Rounded.Favorite, PinPink) { nav.openCollection("VLLM") })
+        add(PinCard(tr("Downloaded", "İndirilenler"), songCount(downloaded.size), downloaded.art(), Icons.Rounded.DownloadDone, PinGreen) { onOpenList("downloads") })
         if (smartOn || offlineMix.isNotEmpty()) {
             val planned = (offlineMix + mixPlan).distinctBy { it.id }.size
             add(PinCard(
-                "Offline Mix",
-                if (planned > offlineMix.size) "${offlineMix.size} of ${songCount(planned)} \u00B7 Auto" else "${songCount(offlineMix.size)} \u00B7 Auto",
+                tr("Offline Mix", "Çevrimdışı Miks"),
+                if (planned > offlineMix.size) "${offlineMix.size} / ${songCount(planned)} \u00B7 Auto" else "${songCount(offlineMix.size)} \u00B7 Auto",
                 offlineMix.art(), Icons.Rounded.AutoAwesome, PinPurple,
             ) { onOpenList("offline") })
         }
     }
 
     val across = if (isLandscape()) 6 else 2 // landscape: all the pins in one row
-    ScreenScaffold("Library", trailing = { AccountButton() }) {
+    ScreenScaffold(tr("Library", "Kitaplık"), trailing = { AccountButton() }) {
         itemsIndexed(pins.chunked(across), key = { i, _ -> "pins-$i" }) { row, pair ->
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(top = if (row == 0) 6.dp else 0.dp, bottom = 14.dp).appear(row),
@@ -174,7 +182,7 @@ fun LibraryScreen(onOpenList: (String) -> Unit, onOpenLibrary: (String) -> Unit)
         if (smart.isNotEmpty()) {
             item(key = "smart") {
                 Column(Modifier.appear(2)) {
-                    SectionHeader("Smart Playlists")
+                    SectionHeader(tr("Smart Playlists", "Akıllı Çalma Listeleri"))
                     androidx.compose.foundation.lazy.LazyRow(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Gutter),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -208,15 +216,15 @@ fun LibraryScreen(onOpenList: (String) -> Unit, onOpenLibrary: (String) -> Unit)
         if (loggedIn) {
             item(key = "list") {
                 Column(Modifier.padding(top = 8.dp).appear(2)) {
-                    LibraryMenuRow(Icons.AutoMirrored.Rounded.QueueMusic, "Playlists") { onOpenLibrary(LibraryKind.Playlists.route) }
-                    LibraryMenuRow(Icons.Rounded.MicExternalOn, "Artists") { onOpenLibrary(LibraryKind.Artists.route) }
-                    LibraryMenuRow(Icons.Rounded.Album, "Albums", showDivider = false) { onOpenLibrary(LibraryKind.Albums.route) }
+                    LibraryMenuRow(Icons.AutoMirrored.Rounded.QueueMusic, tr("Playlists", "Çalma Listeleri")) { onOpenLibrary(LibraryKind.Playlists.route) }
+                    LibraryMenuRow(Icons.Rounded.MicExternalOn, tr("Artists", "Sanatçılar")) { onOpenLibrary(LibraryKind.Artists.route) }
+                    LibraryMenuRow(Icons.Rounded.Album, tr("Albums", "Albümler"), showDivider = false) { onOpenLibrary(LibraryKind.Albums.route) }
                 }
             }
         } else {
             item {
                 Text(
-                    "Sign in with Google to see your YouTube Music playlists, albums, artists and liked songs.",
+                    tr("Sign in with Google to see your YouTube Music playlists, albums, artists and liked songs.", "YouTube Music çalma listelerinizi, albümlerinizi, sanatçılarınızı ve beğenilen şarkılarınızı görmek için Google ile giriş yapın."),
                     style = AppTheme.type.footnote,
                     color = c.secondaryLabel,
                     modifier = Modifier
@@ -230,14 +238,14 @@ fun LibraryScreen(onOpenList: (String) -> Unit, onOpenLibrary: (String) -> Unit)
             item {
                 EmptyState(
                     Icons.Rounded.LibraryMusic,
-                    "Nothing played yet",
-                    "Songs you play and favorite will show up here.",
+                    tr("Nothing played yet", "Henüz bir şey çalınmadı"),
+                    tr("Songs you play and favorite will show up here.", "Çaldığınız ve favorilere eklediğiniz şarkılar burada görünecektir."),
                 )
             }
         } else {
             item(key = "recent-shelf") {
                 Box(Modifier.appear(3)) {
-                    SongShelf("Recently Played", recents.take(15), play, onHeaderClick = { onOpenList("recents") })
+                    SongShelf(tr("Recently Played", "Son Çalınanlar"), recents.take(15), play, onHeaderClick = { onOpenList("recents") })
                 }
             }
         }
@@ -415,13 +423,22 @@ fun BackRow(label: String, onBack: () -> Unit) {
 }
 
 /** Recently Played: every device (YouTube Music history) or only this one. */
-enum class RecentSource(val label: String) { All("All Devices"), Device("This Device") }
+enum class RecentSource(private val en: String, private val trText: String) {
+    All("All Devices", "Tüm Cihazlar"), Device("This Device", "Bu Cihaz");
+    val label get() = tr(en, trText)
+}
 
 /** Downloaded list: everything, what you downloaded yourself, or what the Offline Mix did. */
-enum class DownloadSource(val label: String) { All("All"), Mine("By You"), Auto("Automatic") }
+enum class DownloadSource(private val en: String, private val trText: String) {
+    All("All", "Tümü"), Mine("By You", "Sizin"), Auto("Automatic", "Otomatik");
+    val label get() = tr(en, trText)
+}
 
 /** Sorting for local song lists. */
-enum class SongSort(val label: String) { Recent("Recent"), Title("Title"), Artist("Artist") }
+enum class SongSort(private val en: String, private val trText: String) {
+    Recent("Recent", "Son"), Title("Title", "Ad"), Artist("Artist", "Sanatçı");
+    val label get() = tr(en, trText)
+}
 
 /** Favorites / Downloaded / Recently Played, in the same style as the playlist pages. */
 @Composable
@@ -444,12 +461,12 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
         val d = downloadMap[song.id]
         return when {
             d?.isDone == true -> null
-            d?.state == androidx.media3.exoplayer.offline.Download.STATE_FAILED -> "Couldn\u2019t download"
-            !online -> "Waiting for a connection"
-            d?.state == androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING && d.percent > 0f -> "Downloading ${d.percent.toInt()}%"
-            d?.state == androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING -> "Downloading\u2026"
-            !onCellularToo && kind == "offline" && !connection.network.isUnmetered() -> "Waiting for Wi-Fi"
-            else -> "Waiting to download"
+            d?.state == androidx.media3.exoplayer.offline.Download.STATE_FAILED -> tr("Couldn\u2019t download", "İndirilemedi")
+            !online -> tr("Waiting for a connection", "Bağlantı bekleniyor")
+            d?.state == androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING && d.percent > 0f -> tr("Downloading ${d.percent.toInt()}%", "İndiriliyor %${d.percent.toInt()}")
+            d?.state == androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING -> tr("Downloading\u2026", "İndiriliyor…")
+            !onCellularToo && kind == "offline" && !connection.network.isUnmetered() -> tr("Waiting for Wi-Fi", "Wi-Fi bekleniyor")
+            else -> tr("Waiting to download", "İndirmeyi bekliyor")
         }
     }
     // Recently Played: everywhere (your YouTube Music history) or just this device.
@@ -471,9 +488,9 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
         }
     }
     val (title, songs) = when (kind) {
-        "favorites" -> "Favorite Songs" to favorites
+        "favorites" -> tr("Favorite Songs", "Favori Şarkılar") to favorites
         // Finished downloads first, then the ones still on their way (shown greyed out).
-        "downloads" -> "Downloaded" to downloadMap.values.sortedBy { !it.isDone }.filter { d ->
+        "downloads" -> tr("Downloaded", "İndirildi") to downloadMap.values.sortedBy { !it.isDone }.filter { d ->
             (d.isDone || d.isActive || d.state == androidx.media3.exoplayer.offline.Download.STATE_FAILED) && when (source) {
                 DownloadSource.All -> true
                 DownloadSource.Mine -> d.song.id !in autoIds
@@ -481,7 +498,7 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
             }
         }.map { it.song }
         // The whole mix right away: what's ready first, then what's still downloading.
-        "offline" -> "Offline Mix" to run {
+        "offline" -> tr("Offline Mix", "Çevrimdışı Miks") to run {
             val ready = (cachedSongs.filter { downloadMap[it.id]?.isDone != true } +
                 downloadMap.values.filter { it.isDone && it.song.id in autoIds }.map { it.song }).distinctBy { it.id }
             val readyIds = ready.map { it.id }.toSet()
@@ -489,8 +506,8 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
         }
         else -> if (kind.startsWith("smart-")) {
             com.enes.liquidtube.data.SmartPlaylists.all(connection.library, downloadMap)
-                .firstOrNull { it.id == kind }?.let { it.title to it.songs } ?: ("Smart Playlist" to emptyList())
-        } else "Recently Played" to (if (loggedIn && recentSource == RecentSource.All) allRecents else recents)
+                .firstOrNull { it.id == kind }?.let { it.title to it.songs } ?: (tr("Smart Playlist", "Akıllı Liste") to emptyList())
+        } else tr("Recently Played", "Son Çalınanlar") to (if (loggedIn && recentSource == RecentSource.All) allRecents else recents)
     }
     var query by rememberSaveable { mutableStateOf("") }
     var sort by rememberSaveable { mutableStateOf(SongSort.Recent) }
@@ -510,13 +527,13 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
     val allDownloaded = songs.isNotEmpty() && done == songs.size
 
     val (coverIcon, coverGradient, coverText) = when (kind) {
-        "favorites" -> Triple(Icons.Rounded.Star, PinRed, "Your favorites")
-        "downloads" -> Triple(Icons.Rounded.DownloadDone, PinGreen, "On this device")
-        "offline" -> Triple(Icons.Rounded.AutoAwesome, PinPurple, "Made for offline · Auto")
+        "favorites" -> Triple(Icons.Rounded.Star, PinRed, tr("Your favorites", "Favorileriniz"))
+        "downloads" -> Triple(Icons.Rounded.DownloadDone, PinGreen, tr("On this device", "Bu cihazda"))
+        "offline" -> Triple(Icons.Rounded.AutoAwesome, PinPurple, tr("Made for offline · Auto", "Çevrimdışı için · Otomatik"))
         else -> if (kind.startsWith("smart-")) Triple(
             Icons.Rounded.AutoAwesome, smartGradient(kind),
-            com.enes.liquidtube.data.SmartPlaylists.all(connection.library, downloadMap).firstOrNull { it.id == kind }?.subtitle ?: "Smart playlist",
-        ) else Triple(Icons.Rounded.History, PinBlue, "Your listening history")
+            com.enes.liquidtube.data.SmartPlaylists.all(connection.library, downloadMap).firstOrNull { it.id == kind }?.subtitle ?: tr("Smart playlist", "Akıllı liste"),
+        ) else Triple(Icons.Rounded.History, PinBlue, tr("Your listening history", "Dinleme geçmişiniz"))
     }
     ScreenScaffold(title, onBack = onBack, backdropUrl = songs.firstOrNull()?.thumbnailUrl, backdropGlow = true) {
         item(key = "cover") { ListCover(songs.art(), coverIcon, coverGradient, coverText) }
@@ -554,12 +571,12 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
                         "offline" -> Icons.Rounded.AutoAwesome
                         else -> Icons.Rounded.History
                     },
-                    "Nothing here yet",
+                    tr("Nothing here yet", "Henüz bir şey yok"),
                     when (kind) {
-                        "favorites" -> "Tap the star on the player to favorite a song."
-                        "offline" -> "Songs you listen to are saved here as they play, plus a smart mix of your favorites, liked and most-played songs downloaded on Wi-Fi."
-                        "downloads" -> "Download songs or whole albums from their ••• menu to listen offline."
-                        else -> "Songs you play will show up here."
+                        "favorites" -> tr("Tap the star on the player to favorite a song.", "Bir şarkıyı favorilere eklemek için oynatıcıdaki yıldıza dokunun.")
+                        "offline" -> tr("Songs you listen to are saved here as they play, plus a smart mix of your favorites, liked and most-played songs downloaded on Wi-Fi.", "Dinlediğiniz şarkılar çalarken buraya kaydedilir; ayrıca Wi-Fi'da indirilen favori, beğenilen ve en çok dinlenenlerden akıllı bir miks.")
+                        "downloads" -> tr("Download songs or whole albums from their ••• menu to listen offline.", "Çevrimdışı dinlemek için şarkıları veya albümleri ••• menüsünden indirin.")
+                        else -> tr("Songs you play will show up here.", "Çaldığınız şarkılar burada görünür.")
                     },
                 )
             }
@@ -568,10 +585,10 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
         item(key = "actions") {
             com.enes.liquidtube.ui.collection.PlayActionRow(
                 onPlay = { connection.play(shown) },
-                left = com.enes.liquidtube.ui.collection.SideAction(Icons.Rounded.Shuffle, "Shuffle") { connection.shufflePlay(shown) },
+                left = com.enes.liquidtube.ui.collection.SideAction(Icons.Rounded.Shuffle, tr("Shuffle", "Karıştır")) { connection.shufflePlay(shown) },
                 right = if (kind == "downloads" || kind == "offline") null else com.enes.liquidtube.ui.collection.SideAction(
                     if (allDownloaded) Icons.Rounded.DownloadDone else Icons.Rounded.ArrowCircleDown,
-                    when { allDownloaded -> "Downloaded"; downloading -> "Downloading"; else -> "Download All" },
+                    when { allDownloaded -> tr("Downloaded", "İndirildi"); downloading -> tr("Downloading", "İndiriliyor"); else -> tr("Download All", "Tümünü İndir") },
                     enabled = !allDownloaded && !downloading,
                     active = allDownloaded || downloading,
                 ) { connection.downloads.download(songs) },
@@ -592,7 +609,7 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
             }
         }
         if (shown.isEmpty()) {
-            item { EmptyState(Icons.Rounded.Search, "No matches", "Try another search.") }
+            item { EmptyState(Icons.Rounded.Search, tr("No matches", "Eşleşme yok"), tr("Try another search.", "Başka bir arama deneyin.")) }
         }
         itemsIndexed(shown, key = { _, s -> s.id }) { i, song ->
             SongRow(
@@ -608,7 +625,7 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
             if (waiting > 0) {
                 item(key = "pending-note") {
                     Text(
-                        "${songs.size - waiting} of ${songs.size} ready offline \u00B7 $waiting still downloading",
+                        tr("${songs.size - waiting} of ${songs.size} ready offline \u00B7 $waiting still downloading", "${songs.size} şarkıdan ${songs.size - waiting} tanesi çevrimdışı hazır \u00B7 $waiting tanesi indiriliyor"),
                         style = AppTheme.type.footnote,
                         color = AppTheme.colors.secondaryLabel,
                         modifier = Modifier.padding(horizontal = Gutter).padding(top = 14.dp),
@@ -618,7 +635,7 @@ fun SongListScreen(kind: String, onBack: () -> Unit) {
         }
         item(key = "count") {
             Text(
-                if (songs.size == 1) "1 song" else "${songs.size} songs",
+                songCount(songs.size),
                 style = AppTheme.type.footnote,
                 color = AppTheme.colors.secondaryLabel,
                 modifier = Modifier.padding(horizontal = Gutter, vertical = 18.dp),
@@ -681,10 +698,10 @@ fun LibraryGridScreen(onBack: () -> Unit, viewModel: LibraryGridViewModel = hilt
 
     fun newPlaylist() = overlay.prompt(
         PromptSpec(
-            title = "New Playlist",
-            message = "It’s created in your YouTube Music library.",
-            placeholder = "Playlist Name",
-            confirm = "Create",
+            title = tr("New Playlist", "Yeni Çalma Listesi"),
+            message = tr("It’s created in your YouTube Music library.", "YouTube Music kitaplığınızda oluşturulur."),
+            placeholder = tr("Playlist Name", "Çalma Listesi Adı"),
+            confirm = tr("Create", "Oluştur"),
             onConfirm = { name ->
                 connection.createPlaylist(name, emptyList()) { id ->
                     viewModel.load()
@@ -695,22 +712,22 @@ fun LibraryGridScreen(onBack: () -> Unit, viewModel: LibraryGridViewModel = hilt
     )
 
     fun removeAction(item: CollectionItem) = if (item.type != CollectionType.ARTIST) listOf(
-        MenuAction("Remove from Library", Icons.Rounded.RemoveCircleOutline, destructive = true) {
+        MenuAction(tr("Remove from Library", "Kitaplıktan Kaldır"), Icons.Rounded.RemoveCircleOutline, destructive = true) {
             connection.savePlaylist(item.browseId, save = false)
             viewModel.load()
         },
     ) else emptyList()
 
-    ScreenScaffold(kind.title, onBack = onBack, backdropUrl = state.items.firstOrNull()?.thumbnailUrl, backdropGlow = true) {
+    ScreenScaffold(kind.title(), onBack = onBack, backdropUrl = state.items.firstOrNull()?.thumbnailUrl, backdropGlow = true) {
         if (state.items.size > 6) {
-            item(key = "find") { FindField(query, "Find in ${kind.title}") { query = it } }
+            item(key = "find") { FindField(query, tr("Find in ${kind.title()}", "${kind.title()} içinde ara")) { query = it } }
         }
         if (state.items.size > 1) {
             item(key = "filters") {
                 FilterChips(
                     options = filters,
                     selected = filter,
-                    label = { it.label },
+                    label = { it.label() },
                     onSelect = { filter = it },
                     modifier = Modifier.padding(top = 4.dp, bottom = 6.dp),
                 )
@@ -719,11 +736,11 @@ fun LibraryGridScreen(onBack: () -> Unit, viewModel: LibraryGridViewModel = hilt
         when {
             state.isLoading -> item { LoadingBox() }
             state.error -> item {
-                EmptyState(Icons.Rounded.WifiOff, "Couldn't load", "Check your connection and try again.",
-                    action = "Try Again" to viewModel::load)
+                EmptyState(Icons.Rounded.WifiOff, tr("Couldn't load", "Yüklenemedi"), tr("Check your connection and try again.", "Bağlantınızı kontrol edip tekrar deneyin."),
+                    action = tr("Try Again", "Tekrar Dene") to viewModel::load)
             }
             kind == LibraryKind.Albums -> {
-                if (shown.isEmpty()) item { EmptyState(Icons.Rounded.Album, "No albums", "Albums you add on YouTube Music show up here.") }
+                if (shown.isEmpty()) item { EmptyState(Icons.Rounded.Album, tr("No albums", "Albüm yok"), tr("Albums you add on YouTube Music show up here.", "YouTube Music'te eklediğiniz albümler burada görünür.")) }
                 itemsIndexed(shown.chunked(across), key = { i, _ -> "row-$i" }) { row, pair ->
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(top = 10.dp, bottom = 8.dp).appear(row),
@@ -741,14 +758,14 @@ fun LibraryGridScreen(onBack: () -> Unit, viewModel: LibraryGridViewModel = hilt
                     item(key = "new") { NewPlaylistRow(::newPlaylist) }
                 }
                 if (shown.isEmpty() && kind == LibraryKind.Artists) {
-                    item { EmptyState(Icons.Rounded.MicExternalOn, "No artists", "Artists from songs in your library show up here.") }
+                    item { EmptyState(Icons.Rounded.MicExternalOn, tr("No artists", "Sanatçı yok"), tr("Artists from songs in your library show up here.", "Kitaplığınızdaki şarkıların sanatçıları burada görünür.")) }
                 }
                 if (shown.isEmpty() && kind == LibraryKind.Playlists && filter != LibraryFilter.All) {
                     item {
                         EmptyState(
                             Icons.AutoMirrored.Rounded.QueueMusic,
-                            if (filter == LibraryFilter.ByYou) "No playlists by you" else "No saved playlists",
-                            if (filter == LibraryFilter.ByYou) "Playlists you create show up here." else "Playlists you add from others show up here.",
+                            if (filter == LibraryFilter.ByYou) tr("No playlists by you", "Oluşturduğunuz çalma listesi yok") else tr("No saved playlists", "Kayıtlı çalma listesi yok"),
+                            if (filter == LibraryFilter.ByYou) tr("Playlists you create show up here.", "Oluşturduğunuz çalma listeleri burada görünür.") else tr("Playlists you add from others show up here.", "Başkalarından eklediğiniz çalma listeleri burada görünür."),
                         )
                     }
                 }
@@ -783,7 +800,7 @@ private fun NewPlaylistRow(onClick: () -> Unit) {
         }
         Spacer(Modifier.width(14.dp))
         Box(Modifier.weight(1f).height(74.dp), contentAlignment = Alignment.CenterStart) {
-            Text("New Playlist…", style = AppTheme.type.callout.copy(fontSize = 17.sp), color = c.accent)
+            Text(tr("New Playlist…", "Yeni Çalma Listesi…"), style = AppTheme.type.callout.copy(fontSize = 17.sp), color = c.accent)
             HorizontalDivider(Modifier.align(Alignment.BottomStart), thickness = 0.5.dp, color = c.separator.copy(alpha = if (c.isDark) 0.55f else 0.7f))
         }
     }
@@ -818,7 +835,7 @@ fun FindField(value: String, placeholder: String, onChange: (String) -> Unit) {
         }
         if (value.isNotEmpty()) {
             Icon(
-                Icons.Rounded.Cancel, "Clear",
+                Icons.Rounded.Cancel, tr("Clear", "Temizle"),
                 tint = c.tertiaryLabel,
                 modifier = Modifier.size(20.dp).clickable { onChange("") },
             )
@@ -827,8 +844,15 @@ fun FindField(value: String, placeholder: String, onChange: (String) -> Unit) {
 }
 
 /** Filters for library lists: ownership for playlists, sorting for albums and artists. */
-enum class LibraryFilter(val label: String) {
-    All("All"), ByYou("By You"), Saved("Saved"), AtoZ("A–Z");
+enum class LibraryFilter {
+    All, ByYou, Saved, AtoZ;
+
+        fun label(): String = when (this) {
+        All -> tr("All", "Tümü")
+        ByYou -> tr("By You", "Sizin Oluşturduklarınız")
+        Saved -> tr("Saved", "Kaydedilenler")
+        AtoZ -> tr("A–Z", "A–Z")
+    }
 
     companion object {
         fun forKind(kind: LibraryKind) =
@@ -837,4 +861,5 @@ enum class LibraryFilter(val label: String) {
 }
 
 /** "1 song", "12 songs". */
-private fun songCount(n: Int) = if (n == 1) "1 song" else "$n songs"
+@Composable
+private fun songCount(n: Int) = if (n == 1) tr("1 song", "1 şarkı") else tr("$n songs", "$n şarkı")

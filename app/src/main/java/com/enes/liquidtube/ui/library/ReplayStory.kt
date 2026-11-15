@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.library
 
+import com.enes.liquidtube.ui.theme.tr
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -169,9 +170,9 @@ internal fun ReplayStory(stats: ReplayStats, onClose: () -> Unit) {
                 Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("Replay · ${stats.monthTitle}", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    StoryButton(Icons.Rounded.Share, "Share") { scope.launch { shareStory(context, stats) } }
+                    StoryButton(Icons.Rounded.Share, tr("Share", "Paylaş")) { scope.launch { shareStory(context, stats) } }
                     Spacer(Modifier.width(8.dp))
-                    StoryButton(Icons.Rounded.Close, "Close", onClose)
+                    StoryButton(Icons.Rounded.Close, tr("Close", "Kapat"), onClose)
                 }
             }
         }
@@ -210,23 +211,23 @@ private fun IntroCard(s: ReplayStats) {
             }
             Spacer(Modifier.height(36.dp))
         }
-        Text("Your ${s.monthTitle}", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.rise(150))
-        Text("Replay", color = Color.White, fontSize = Huge, fontWeight = FontWeight.Black, lineHeight = 92.sp, maxLines = 1, softWrap = false, modifier = Modifier.rise(250))
-        Text("Here’s how your month sounded.", color = Color.White.copy(alpha = 0.8f), fontSize = 20.sp, modifier = Modifier.rise(450))
+        Text(tr("Your ${s.monthTitle}", "${s.monthTitle} Özetiniz"), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.rise(150))
+        Text(tr("Replay", "Replay"), color = Color.White, fontSize = Huge, fontWeight = FontWeight.Black, lineHeight = 92.sp, maxLines = 1, softWrap = false, modifier = Modifier.rise(250))
+        Text(tr("Here’s how your month sounded.", "İşte ayınızın sesi."), color = Color.White.copy(alpha = 0.8f), fontSize = 20.sp, modifier = Modifier.rise(450))
     }
 }
 
 @Composable
 private fun MinutesCard(s: ReplayStats) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-        Text("You listened for", color = Color.White.copy(alpha = 0.85f), fontSize = 24.sp, modifier = Modifier.rise(0))
+        Text(tr("You listened for", "Dinlediğiniz süre"), color = Color.White.copy(alpha = 0.85f), fontSize = 24.sp, modifier = Modifier.rise(0))
         Text("%,d".format(s.minutes), color = Color.White, fontSize = 110.sp, fontWeight = FontWeight.Black, lineHeight = 112.sp, modifier = Modifier.rise(200))
         Text("minutes", color = Color.White, fontSize = Big, lineHeight = 52.sp, fontWeight = FontWeight.Bold, modifier = Modifier.rise(350))
         Spacer(Modifier.height(24.dp))
         val hours = s.minutes / 60
         Text(
             if (hours >= 1) "That’s about $hours hour${if (hours == 1L) "" else "s"} of music, across ${s.songs.size} songs."
-            else "Across ${s.songs.size} songs. Just getting started.",
+            else tr("Across ${s.songs.size} songs. Just getting started.", "${s.songs.size} şarkı boyunca. Daha yeni başlıyor."),
             color = Color.White.copy(alpha = 0.85f), fontSize = 20.sp, modifier = Modifier.rise(550),
         )
     }
@@ -235,19 +236,19 @@ private fun MinutesCard(s: ReplayStats) {
 @Composable
 private fun TopArtistCard(name: String, ms: Long, art: String?) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Your top artist", color = Color.White.copy(alpha = 0.85f), fontSize = 22.sp, modifier = Modifier.rise(0))
+        Text(tr("Your top artist", "En çok dinlediğiniz sanatçı"), color = Color.White.copy(alpha = 0.85f), fontSize = 22.sp, modifier = Modifier.rise(0))
         Spacer(Modifier.height(24.dp))
         Artwork(art, Modifier.size(230.dp).rise(150), corner = 115.dp)
         Spacer(Modifier.height(24.dp))
         Text(name, color = Color.White, fontSize = Big, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, lineHeight = 50.sp, modifier = Modifier.rise(300))
-        Text("${ms / 60_000} minutes together", color = Color.White.copy(alpha = 0.85f), fontSize = 20.sp, modifier = Modifier.rise(450))
+        Text(tr("${ms / 60_000} minutes together", "Birlikte ${ms / 60_000} dakika"), color = Color.White.copy(alpha = 0.85f), fontSize = 20.sp, modifier = Modifier.rise(450))
     }
 }
 
 @Composable
 private fun TopSongsCard(s: ReplayStats) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-        Text("Your top songs", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Black, modifier = Modifier.rise(0))
+        Text(tr("Your top songs", "En çok dinlediğiniz şarkılar"), color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Black, modifier = Modifier.rise(0))
         Spacer(Modifier.height(22.dp))
         s.songs.take(5).forEachIndexed { i, (song, ms) ->
             Row(Modifier.padding(vertical = 7.dp).rise(120 + i * 110), verticalAlignment = Alignment.CenterVertically) {
@@ -256,7 +257,7 @@ private fun TopSongsCard(s: ReplayStats) {
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(song.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("${song.artists} · ${ms / 60_000} min", color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("${song.artists} · ${ms / 60_000} " + tr("min", "dk"), color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -266,7 +267,7 @@ private fun TopSongsCard(s: ReplayStats) {
 @Composable
 private fun TopArtistsCard(s: ReplayStats) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-        Text("Your top artists", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Black, modifier = Modifier.rise(0))
+        Text(tr("Your top artists", "En çok dinlediğiniz sanatçılar"), color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Black, modifier = Modifier.rise(0))
         Spacer(Modifier.height(22.dp))
         s.artists.take(5).forEachIndexed { i, (name, ms) ->
             Row(Modifier.padding(vertical = 7.dp).rise(120 + i * 110), verticalAlignment = Alignment.CenterVertically) {
@@ -275,7 +276,7 @@ private fun TopArtistsCard(s: ReplayStats) {
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(name, color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("${ms / 60_000} minutes", color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
+                    Text("${ms / 60_000} " + tr("minutes", "dakika"), color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
                 }
             }
         }
@@ -289,16 +290,16 @@ private fun HabitsCard(s: ReplayStats) {
         "afternoon" -> "🌤️" to "an afternoon listener"
         "evening" -> "🌆" to "an evening listener"
         "night" -> "🌙" to "a night owl"
-        else -> "🎧" to "always listening"
+        else -> "🎧" to tr("always listening", "hep müzik dinliyorsunuz")
     }
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
         Text(emoji, fontSize = 80.sp, modifier = Modifier.rise(0))
         Spacer(Modifier.height(16.dp))
-        Text("You’re", color = Color.White.copy(alpha = 0.85f), fontSize = 24.sp, modifier = Modifier.rise(150))
+        Text(tr("You’re", "Siz"), color = Color.White.copy(alpha = 0.85f), fontSize = 24.sp, modifier = Modifier.rise(150))
         Text(phrase, color = Color.White, fontSize = Big, fontWeight = FontWeight.Black, lineHeight = 50.sp, modifier = Modifier.rise(300))
         Spacer(Modifier.height(24.dp))
         Text(
-            "${s.songs.size} different songs from ${s.artists.size} artists this month.",
+            tr("${s.songs.size} different songs from ${s.artists.size} artists this month.", "Bu ay ${s.artists.size} sanatçıdan ${s.songs.size} farklı şarkı."),
             color = Color.White.copy(alpha = 0.85f), fontSize = 20.sp, modifier = Modifier.rise(450),
         )
     }
@@ -309,7 +310,7 @@ private fun OutroCard(s: ReplayStats) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("That’s your", color = Color.White.copy(alpha = 0.85f), fontSize = 24.sp, modifier = Modifier.rise(0))
+        Text(tr("That’s your", "İşte sizin"), color = Color.White.copy(alpha = 0.85f), fontSize = 24.sp, modifier = Modifier.rise(0))
         Text(s.monthTitle, color = Color.White, fontSize = Big, lineHeight = 52.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, modifier = Modifier.rise(150))
         Spacer(Modifier.height(40.dp))
         Row(
@@ -323,7 +324,7 @@ private fun OutroCard(s: ReplayStats) {
         ) {
             Icon(Icons.Rounded.Share, null, tint = Color.Black, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Share Your Replay", color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Text(tr("Share Your Replay", "Replay'inizi Paylaşın"), color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -341,9 +342,9 @@ private suspend fun shareStory(context: Context, s: ReplayStats) {
     val send = Intent(Intent.ACTION_SEND)
         .setType("image/png")
         .putExtra(Intent.EXTRA_STREAM, uri)
-        .putExtra(Intent.EXTRA_TEXT, "My ${s.monthTitle} on LiquidTube: ${"%,d".format(s.minutes)} minutes")
+        .putExtra(Intent.EXTRA_TEXT, tr("My ${s.monthTitle} on LiquidTube: ${"%,d".format(s.minutes)} minutes", "LiquidTube'da ${s.monthTitle}: ${"%,d".format(s.minutes)} dakika"))
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    context.startActivity(Intent.createChooser(send, "Share Replay").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    context.startActivity(Intent.createChooser(send, tr("Share Replay", "Replay'i Paylaş")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
 private suspend fun loadBitmap(context: Context, url: String?, size: Int): Bitmap? {
@@ -378,14 +379,14 @@ private suspend fun renderStory(context: Context, s: ReplayStats): Bitmap {
 
     val x = 90f
     var y = 230f
-    c.drawText("My ${s.monthTitle}", x, y, paint(56f, 600, 220)); y += 130f
-    c.drawText("Replay", x, y, paint(140f, 900)); y += 150f
-    c.drawText("%,d minutes".format(s.minutes), x, y, paint(84f, 800)); y += 70f
+    c.drawText(tr("My ${s.monthTitle}", "${s.monthTitle}"), x, y, paint(56f, 600, 220)); y += 130f
+    c.drawText(tr("Replay", "Replay"), x, y, paint(140f, 900)); y += 150f
+    c.drawText(tr("%,d minutes", "%,d dakika").format(s.minutes), x, y, paint(84f, 800)); y += 70f
     s.artists.firstOrNull()?.let { (name, _) ->
-        c.drawText(ellipsize("Top artist: $name", paint(46f, 600, 230), w - 2 * x), x, y, paint(46f, 600, 230))
+        c.drawText(ellipsize(tr("Top artist: $name", "En çok dinlenen: $name"), paint(46f, 600, 230), w - 2 * x), x, y, paint(46f, 600, 230))
     }
     y += 110f
-    c.drawText("Top songs", x, y, paint(52f, 800)); y += 40f
+    c.drawText(tr("Top songs", "En çok dinlenen şarkılar"), x, y, paint(52f, 800)); y += 40f
     s.songs.take(5).forEachIndexed { i, (song, _) ->
         val art = loadBitmap(context, song.thumbnailUrl, 200)
         c.drawText("${i + 1}", x, y + 110f, paint(60f, 900))

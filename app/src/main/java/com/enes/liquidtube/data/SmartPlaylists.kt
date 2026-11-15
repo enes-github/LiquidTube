@@ -1,5 +1,6 @@
 package com.enes.liquidtube.data
 
+import com.enes.liquidtube.ui.theme.tr
 import com.enes.liquidtube.download.DownloadInfo
 import com.enes.innertube.models.SongItem
 import java.text.SimpleDateFormat
@@ -23,12 +24,13 @@ object SmartPlaylists {
     const val UNPLAYED = "smart-unplayed"
     const val TIME_PREFIX = "smart-time-"
 
-    private val PART_TITLES = mapOf(
-        "morning" to ("Your Morning Mix" to "What you play in the mornings"),
-        "afternoon" to ("Your Afternoon Mix" to "What you play in the afternoons"),
-        "evening" to ("Your Evening Mix" to "What you play in the evenings"),
-        "night" to ("Your Late Night Mix" to "What you play late at night"),
-    )
+    /** Title and subtitle for a part of the day, in the app's language. */
+    private fun partTitles(part: String): Pair<String, String> = when (part) {
+        "morning" -> tr("Your Morning Mix", "Sabah Miksiniz") to tr("What you play in the mornings", "Sabahları dinledikleriniz")
+        "afternoon" -> tr("Your Afternoon Mix", "Öğleden Sonra Miksiniz") to tr("What you play in the afternoons", "Öğleden sonraları dinledikleriniz")
+        "evening" -> tr("Your Evening Mix", "Akşam Miksiniz") to tr("What you play in the evenings", "Akşamları dinledikleriniz")
+        else -> tr("Your Late Night Mix", "Gece Yarısı Miksiniz") to tr("What you play late at night", "Gece geç saatlerde dinledikleriniz")
+    }
 
     /**
      * The mix for a part of the day (now, by default): songs you actually play at that
@@ -45,7 +47,7 @@ object SmartPlaylists {
             .sortedByDescending { it.second }
             .mapNotNull { library.songFor(it.first.key) }
             .take(40)
-        val (title, subtitle) = PART_TITLES.getValue(part)
+        val (title, subtitle) = partTitles(part)
         return Smart(TIME_PREFIX + part, title, subtitle, songs)
     }
 
@@ -80,10 +82,10 @@ object SmartPlaylists {
 
         return listOfNotNull(
             timeMix(library),
-            Smart(ON_REPEAT, "On Repeat", "Your most played this month", onRepeat),
-            Smart(MOST_PLAYED, "Most Played", "Your all-time most played", mostPlayed),
-            Smart(FORGOTTEN, "Forgotten Favorites", "Loved, but not heard in a month", forgotten),
-            Smart(UNPLAYED, "Downloaded, Never Played", "Downloads waiting for you", unplayed),
+            Smart(ON_REPEAT, tr("On Repeat", "Tekrar Tekrar"), tr("Your most played this month", "Bu ay en çok dinledikleriniz"), onRepeat),
+            Smart(MOST_PLAYED, tr("Most Played", "En Çok Dinlenenler"), tr("Your all-time most played", "Tüm zamanların en çok dinlenenleri"), mostPlayed),
+            Smart(FORGOTTEN, tr("Forgotten Favorites", "Unutulan Favoriler"), tr("Loved, but not heard in a month", "Sevilen ama bir aydır dinlenmeyenler"), forgotten),
+            Smart(UNPLAYED, tr("Downloaded, Never Played", "İndirilen, Hiç Dinlenmeyen"), tr("Downloads waiting for you", "Sizi bekleyen indirmeler"), unplayed),
         )
     }
 }

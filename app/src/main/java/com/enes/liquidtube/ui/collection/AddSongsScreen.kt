@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.collection
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
@@ -124,14 +125,14 @@ fun AddSongsScreen(onBack: () -> Unit, viewModel: AddSongsViewModel = hiltViewMo
     val c = AppTheme.colors
     val searching = state.query.isNotBlank()
 
-    ScreenScaffold("Add Songs", onBack = onBack) {
+    ScreenScaffold(tr("Add Songs", "Şarkı Ekle"), onBack = onBack) {
         item(key = "field") {
-            FindField(state.query, "Search for songs") { viewModel.onQuery(it) }
+            FindField(state.query, tr("Search for songs", "Şarkı ara")) { viewModel.onQuery(it) }
         }
         if (!searching) {
             item(key = "suggest-title") {
                 Text(
-                    if (viewModel.title.isNotBlank()) "Suggested for “${viewModel.title}”" else "Suggested",
+                    if (viewModel.title.isNotBlank()) tr("Suggested for “${viewModel.title}”", "“${viewModel.title}” için öneriler") else tr("Suggested", "Önerilenler"),
                     style = AppTheme.type.title3.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
                     color = c.label,
                     modifier = Modifier.padding(start = Gutter, end = Gutter, top = 14.dp, bottom = 2.dp),
@@ -139,7 +140,7 @@ fun AddSongsScreen(onBack: () -> Unit, viewModel: AddSongsViewModel = hiltViewMo
             }
             item(key = "suggest-sub") {
                 Text(
-                    "These change as you add songs.",
+                    tr("These change as you add songs.", "Bunlar siz şarkı ekledikçe değişir."),
                     style = AppTheme.type.footnote,
                     color = c.secondaryLabel,
                     modifier = Modifier.padding(start = Gutter, end = Gutter, bottom = 6.dp),
@@ -150,10 +151,10 @@ fun AddSongsScreen(onBack: () -> Unit, viewModel: AddSongsViewModel = hiltViewMo
         when {
             list == null -> item(key = "loading") { LoadingBox(Modifier.padding(vertical = 24.dp)) }
             searching && state.searchFailed -> item(key = "failed") {
-                EmptyState(Icons.Rounded.WifiOff, "Couldn’t search", "Check your connection and try again.")
+                EmptyState(Icons.Rounded.WifiOff, tr("Couldn’t search", "Aranamadı"), tr("Check your connection and try again.", "Bağlantınızı kontrol edip tekrar deneyin."))
             }
             list.isEmpty() -> item(key = "none") {
-                EmptyState(Icons.Rounded.Search, if (searching) "No songs found" else "No suggestions yet", if (searching) "Try another search." else "Search for a song to get started.")
+                EmptyState(Icons.Rounded.Search, if (searching) tr("No songs found", "Şarkı bulunamadı") else tr("No suggestions yet", "Henüz öneri yok"), if (searching) tr("Try another search.", "Başka bir arama deneyin.") else tr("Search for a song to get started.", "Başlamak için bir şarkı arayın."))
             }
             else -> list.forEachIndexed { i, song ->
                 item(key = (if (searching) "r-" else "s-") + song.id) {

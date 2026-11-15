@@ -8,11 +8,35 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class LanguageOption(val code: String, val displayName: String, val nativeName: String)
+
 @Singleton
 class SettingsStore @Inject constructor(
     @ApplicationContext context: Context,
 ) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
+    private val _appLanguage = MutableStateFlow(prefs.getString(KEY_APP_LANGUAGE, "") ?: "")
+    /** Selected app language code ("" = System Default, "tr" = Turkish, "en" = English, etc.). */
+    val appLanguage: StateFlow<String> = _appLanguage.asStateFlow()
+
+    init {
+        applyLanguage(_appLanguage.value)
+    }
+
+    fun setAppLanguage(code: String) {
+        _appLanguage.value = code
+        prefs.edit().putString(KEY_APP_LANGUAGE, code).apply()
+        applyLanguage(code)
+    }
+
+    /** Interface language (redraws every screen) and the language YouTube Music answers in. */
+    private fun applyLanguage(code: String) {
+        com.enes.liquidtube.ui.theme.AppLanguage.code = code
+        val lang = com.enes.liquidtube.ui.theme.AppLanguage.effective
+        com.enes.innertube.InnerTube.hl = lang
+        com.enes.innertube.InnerTube.gl = if (lang == "tr") "TR" else java.util.Locale.getDefault().country.ifBlank { "US" }
+    }
 
     private val _dataSaver = MutableStateFlow(prefs.getBoolean(KEY_DATA_SAVER, false))
     /** Prefer the lowest-bitrate stream (saves mobile data). */
@@ -176,7 +200,15 @@ class SettingsStore @Inject constructor(
         prefs.edit().putString(KEY_STATION, style).apply()
     }
 
-    private companion object {
+    companion object {
+        /** Languages the interface is translated into ("" = follow the phone). */
+        val SUPPORTED_LANGUAGES = listOf(
+            LanguageOption("", "System Default", "Sistem Varsayılanı"),
+            LanguageOption("en", "English", "English"),
+            LanguageOption("tr", "Turkish", "Türkçe"),
+        )
+
+        private const val KEY_APP_LANGUAGE = "app_language"
         const val KEY_AUTO_RESUME = "auto_resume"
         const val KEY_TRANSLATE = "translate_lyrics"
         const val KEY_TRANSLATE_TO = "translate_to"

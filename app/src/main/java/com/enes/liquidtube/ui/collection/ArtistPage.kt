@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.collection
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -152,13 +153,13 @@ internal fun ArtistPage(page: BrowsePage, title: TitleState, artist: ArtistState
             item(key = "actions") {
                 PlayActionRow(
                     onPlay = if (page.songs.isNotEmpty()) ({ connection.play(page.songs) }) else null,
-                    left = SideAction(Icons.Outlined.Info, "About", enabled = about != null) {
+                    left = SideAction(Icons.Outlined.Info, tr("About", "Hakkında"), enabled = about != null) {
                         aboutExpanded = true
                         scope.launch { listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1) }
                     },
                     right = SideAction(
                         if (artist.following) Icons.Rounded.Star else Icons.Rounded.StarOutline,
-                        if (artist.following) "Unfollow" else "Follow",
+                        if (artist.following) tr("Unfollow", "Takibi Bırak") else tr("Follow", "Takip Et"),
                         enabled = loggedIn && page.channelId != null,
                         active = artist.following,
                     ) { toggleFollow(page, artist, connection) },
@@ -175,8 +176,8 @@ internal fun ArtistPage(page: BrowsePage, title: TitleState, artist: ArtistState
                 item(key = "top") {
                     Box(Modifier.appear(1)) {
                         QuickPicksShelf(
-                            "Top Songs", page.songs, play,
-                            onHeaderClick = page.songsMore?.let { ref -> { nav.openSection(ref, "Top Songs") } },
+                            tr("Top Songs", "Popüler Şarkılar"), page.songs, play,
+                            onHeaderClick = page.songsMore?.let { ref -> { nav.openSection(ref, tr("Top Songs", "Popüler Şarkılar")) } },
                         )
                     }
                 }
@@ -199,7 +200,7 @@ internal fun ArtistPage(page: BrowsePage, title: TitleState, artist: ArtistState
             about?.let { text ->
                 item(key = "about") {
                     Column {
-                        SectionHeader("About ${page.title}")
+                        SectionHeader(tr("About ${page.title}", "${page.title} Hakkında"))
                         Column(
                             Modifier
                                 .padding(horizontal = Gutter)
@@ -221,7 +222,7 @@ internal fun ArtistPage(page: BrowsePage, title: TitleState, artist: ArtistState
                             )
                             if (!aboutExpanded) {
                                 Spacer(Modifier.height(6.dp))
-                                Text("MORE", style = AppTheme.type.caption.copy(fontWeight = FontWeight.Bold), color = c.label)
+                                Text(tr("MORE", "DAHA FAZLA"), style = AppTheme.type.caption.copy(fontWeight = FontWeight.Bold), color = c.label)
                             }
                         }
                         Spacer(Modifier.height(12.dp))
@@ -378,7 +379,7 @@ internal fun PlayActionRow(onPlay: (() -> Unit)?, left: SideAction?, right: Side
                     .background(Color.White),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Rounded.PlayArrow, "Play", tint = Color.Black, modifier = Modifier.size(38.dp))
+                Icon(Icons.Rounded.PlayArrow, tr("Play", "Çal"), tint = Color.Black, modifier = Modifier.size(38.dp))
             }
         } else {
             Spacer(Modifier.size(66.dp))
@@ -439,7 +440,7 @@ private fun LatestReleaseCard(item: CollectionItem, canSave: Boolean) {
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                "LATEST RELEASE",
+                tr("LATEST RELEASE", "SON ÇIKAN"),
                 style = AppTheme.type.caption2.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp),
                 color = c.secondaryLabel,
             )
@@ -464,7 +465,7 @@ private fun LatestReleaseCard(item: CollectionItem, canSave: Boolean) {
                     .background(if (c.isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.07f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(if (saved) Icons.Rounded.Check else Icons.Rounded.Add, if (saved) "Added" else "Add to Library", tint = c.accent, modifier = Modifier.size(20.dp))
+                Icon(if (saved) Icons.Rounded.Check else Icons.Rounded.Add, if (saved) tr("Added", "Eklendi") else tr("Add to Library", "Kitaplığa Ekle"), tint = c.accent, modifier = Modifier.size(20.dp))
             }
         }
     }
@@ -485,22 +486,22 @@ internal fun ArtistToolbarActions(page: BrowsePage, artist: ArtistState, backdro
                         roundArtwork = true,
                         quick = buildList {
                             if (page.songs.isNotEmpty()) {
-                                add(MenuAction("Play", Icons.Rounded.PlayArrow) { connection.play(page.songs) })
-                                add(MenuAction("Shuffle", Icons.Rounded.Shuffle) { connection.shufflePlay(page.songs) })
-                                add(MenuAction("Station", Icons.Rounded.Sensors) { connection.playSong(page.songs.first()) })
+                                add(MenuAction(tr("Play", "Çal"), Icons.Rounded.PlayArrow) { connection.play(page.songs) })
+                                add(MenuAction(tr("Shuffle", "Karıştır"), Icons.Rounded.Shuffle) { connection.shufflePlay(page.songs) })
+                                add(MenuAction(tr("Station", "İstasyon"), Icons.Rounded.Sensors) { connection.playSong(page.songs.first()) })
                             }
-                            add(MenuAction("Share", Icons.Rounded.Share) { connection.share(page.title, shareUrl) })
+                            add(MenuAction(tr("Share", "Paylaş"), Icons.Rounded.Share) { connection.share(page.title, shareUrl) })
                         },
                         groups = listOf(
                             buildList {
                                 if (loggedIn && page.channelId != null) {
                                     add(MenuAction(
-                                        if (artist.following) "Unfollow" else "Follow",
+                                        if (artist.following) tr("Unfollow", "Takibi Bırak") else tr("Follow", "Takip Et"),
                                         if (artist.following) Icons.Rounded.Star else Icons.Rounded.StarOutline,
                                     ) { toggleFollow(page, artist, connection) })
                                 }
                                 if (page.songs.isNotEmpty()) {
-                                    add(MenuAction("Add Top Songs to Queue", Icons.AutoMirrored.Rounded.PlaylistAdd) {
+                                    add(MenuAction(tr("Add Top Songs to Queue", "Popüler Şarkıları Sıraya Ekle"), Icons.AutoMirrored.Rounded.PlaylistAdd) {
                                         page.songs.forEach(connection::addToQueue)
                                     })
                                 }
@@ -524,13 +525,13 @@ internal fun GlassActionsCapsule(backdrop: GlassBackdrop, tint: Color, onShare: 
             Modifier.size(width = 50.dp, height = 44.dp).bounceClick(pressedScale = 0.85f, onClick = onShare),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.Share, "Share", tint = tint, modifier = Modifier.size(21.dp))
+            Icon(Icons.Rounded.Share, tr("Share", "Paylaş"), tint = tint, modifier = Modifier.size(21.dp))
         }
         Box(
             Modifier.size(width = 50.dp, height = 44.dp).menuButton(Offset(-180f, 140f), menu),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.MoreHoriz, "More", tint = tint, modifier = Modifier.size(24.dp))
+            Icon(Icons.Rounded.MoreHoriz, tr("More", "Daha Fazla"), tint = tint, modifier = Modifier.size(24.dp))
         }
     }
 }

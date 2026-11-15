@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.components
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -412,29 +413,29 @@ class MenuFactory(
         val download = connection.downloads.downloads.value[song.id]
         val loggedIn = connection.auth.isLoggedIn.value
         val quick = listOf(
-            MenuAction("Play Next", Icons.AutoMirrored.Rounded.QueueMusic) { connection.playNext(song) },
-            MenuAction("Play Last", Icons.AutoMirrored.Rounded.PlaylistAdd) { connection.addToQueue(song) },
-            MenuAction(if (isFavorite) "Unfavorite" else "Favorite", if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline) {
+            MenuAction(tr("Play Next", "Sıradakine Ekle"), Icons.AutoMirrored.Rounded.QueueMusic) { connection.playNext(song) },
+            MenuAction(tr("Play Last", "Sona Ekle"), Icons.AutoMirrored.Rounded.PlaylistAdd) { connection.addToQueue(song) },
+            MenuAction(if (isFavorite) tr("Unfavorite", "Favorilerden Çıkar") else tr("Favorite", "Favori"), if (isFavorite) Icons.Rounded.Star else Icons.Rounded.StarOutline) {
                 connection.toggleFavorite(song)
             },
-            MenuAction("Share", Icons.Rounded.Share) {
+            MenuAction(tr("Share", "Paylaş"), Icons.Rounded.Share) {
                 connection.share(song.title, "https://music.youtube.com/watch?v=${song.id}")
             },
         )
         val library = buildList {
-            add(MenuAction("Start Station", Icons.Rounded.Sensors) { connection.playSong(song) })
-            if (loggedIn) add(MenuAction("Add to a Playlist…", Icons.AutoMirrored.Rounded.PlaylistAdd) { overlay.addToPlaylist(listOf(song)) })
+            add(MenuAction(tr("Start Station", "İstasyon Başlat"), Icons.Rounded.Sensors) { connection.playSong(song) })
+            if (loggedIn) add(MenuAction(tr("Add to a Playlist…", "Çalma Listesine Ekle…"), Icons.AutoMirrored.Rounded.PlaylistAdd) { overlay.addToPlaylist(listOf(song)) })
             if (download == null) {
-                add(MenuAction("Download", Icons.Rounded.ArrowCircleDown) { connection.downloads.download(listOf(song)) })
+                add(MenuAction(tr("Download", "İndir"), Icons.Rounded.ArrowCircleDown) { connection.downloads.download(listOf(song)) })
             } else {
-                add(MenuAction(if (download.isDone) "Remove Download" else "Cancel Download", Icons.Rounded.RemoveCircleOutline, destructive = download.isDone) {
+                add(MenuAction(if (download.isDone) tr("Remove Download", "İndirmeyi Kaldır") else tr("Cancel Download", "İndirmeyi İptal Et"), Icons.Rounded.RemoveCircleOutline, destructive = download.isDone) {
                     connection.downloads.remove(song.id)
                 })
             }
         }
         val go = buildList {
-            song.albumId?.let { id -> add(MenuAction("Go to Album", Icons.Rounded.Album) { onNavigate(); nav.openCollection(id) }) }
-            song.artistId?.let { id -> add(MenuAction("Go to Artist", Icons.Rounded.Person) { onNavigate(); nav.openCollection(id) }) }
+            song.albumId?.let { id -> add(MenuAction(tr("Go to Album", "Albüme Git"), Icons.Rounded.Album) { onNavigate(); nav.openCollection(id) }) }
+            song.artistId?.let { id -> add(MenuAction(tr("Go to Artist", "Sanatçıya Git"), Icons.Rounded.Person) { onNavigate(); nav.openCollection(id) }) }
         }
         return MenuSpec(
             title = song.title,
@@ -448,7 +449,7 @@ class MenuFactory(
     fun collection(item: CollectionItem, extra: List<MenuAction> = emptyList()): MenuSpec {
         val loggedIn = connection.auth.isLoggedIn.value
         val playable = item.type != CollectionType.ARTIST
-        val share = MenuAction("Share", Icons.Rounded.Share) {
+        val share = MenuAction(tr("Share", "Paylaş"), Icons.Rounded.Share) {
             val url = when (item.type) {
                 CollectionType.PLAYLIST -> "https://music.youtube.com/playlist?list=${item.browseId.removePrefix("VL")}"
                 CollectionType.ARTIST -> "https://music.youtube.com/channel/${item.browseId}"
@@ -457,13 +458,13 @@ class MenuFactory(
             connection.share(item.title, url)
         }
         val quick = buildList {
-            add(MenuAction("Play", Icons.Rounded.PlayArrow) { connection.playCollection(item.browseId) })
-            add(MenuAction("Shuffle", Icons.Rounded.Shuffle) { connection.playCollection(item.browseId, shuffle = true) })
-            if (playable) add(MenuAction("Download", Icons.Rounded.ArrowCircleDown) { connection.downloadCollection(item.browseId) })
+            add(MenuAction(tr("Play", "Çal"), Icons.Rounded.PlayArrow) { connection.playCollection(item.browseId) })
+            add(MenuAction(tr("Shuffle", "Karıştır"), Icons.Rounded.Shuffle) { connection.playCollection(item.browseId, shuffle = true) })
+            if (playable) add(MenuAction(tr("Download", "İndir"), Icons.Rounded.ArrowCircleDown) { connection.downloadCollection(item.browseId) })
             add(share)
         }
         val library = buildList {
-            if (loggedIn && playable) add(MenuAction("Add to Library", Icons.Rounded.LibraryAdd) {
+            if (loggedIn && playable) add(MenuAction(tr("Add to Library", "Kitaplığa Ekle"), Icons.Rounded.LibraryAdd) {
                 connection.savePlaylist(item.browseId, save = true)
             })
         }
@@ -769,20 +770,20 @@ private fun PlaylistSheetLayer(controller: OverlayController, connection: Player
                 )
                 Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp)) {
                     Text(
-                        "Cancel",
+                        tr("Cancel", "İptal"),
                         style = AppTheme.type.body,
                         color = c.accent,
                         modifier = Modifier.align(Alignment.CenterStart).clickable { close() },
                     )
-                    Text("Add to Playlist", style = AppTheme.type.headline, color = c.label, modifier = Modifier.align(Alignment.Center))
+                    Text(tr("Add to Playlist", "Çalma Listesine Ekle"), style = AppTheme.type.headline, color = c.label, modifier = Modifier.align(Alignment.Center))
                 }
-                SheetRow(icon = Icons.Rounded.Add, label = "New Playlist…", accent = true) {
+                SheetRow(icon = Icons.Rounded.Add, label = tr("New Playlist…", "Yeni Çalma Listesi…"), accent = true) {
                     close()
                     controller.prompt(
                         PromptSpec(
-                            title = "New Playlist",
-                            placeholder = "Playlist Name",
-                            confirm = "Create",
+                            title = tr("New Playlist", "Yeni Çalma Listesi"),
+                            placeholder = tr("Playlist Name", "Çalma Listesi Adı"),
+                            confirm = tr("Create", "Oluştur"),
                             onConfirm = { name -> connection.createPlaylist(name, shownSongs) },
                         )
                     )
@@ -909,7 +910,7 @@ private fun PromptLayer(controller: OverlayController, backdrop: GlassBackdrop) 
                         Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        PromptButton("Cancel", primary = false, enabled = true, destructive = false, modifier = Modifier.weight(1f)) { close() }
+                        PromptButton(tr("Cancel", "İptal"), primary = false, enabled = true, destructive = false, modifier = Modifier.weight(1f)) { close() }
                         PromptButton(current.confirm, primary = true, enabled = text.isNotBlank(), destructive = current.destructive, modifier = Modifier.weight(1f)) {
                             close(); current.onConfirm(text.trim())
                         }

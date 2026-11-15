@@ -2,6 +2,7 @@
 
 package com.enes.liquidtube.ui.home
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -65,6 +66,15 @@ fun FeedScreen(
 
     val healthy by connection.playbackHealthy.collectAsStateWithLifecycle()
     val cachedNow by connection.playCache.cached.collectAsStateWithLifecycle()
+    // Language changed: YouTube Music now answers in the new language, so reload.
+    val language = com.enes.liquidtube.ui.theme.AppLanguage.effective
+    var shownLanguage by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(language) }
+    androidx.compose.runtime.LaunchedEffect(language) {
+        if (language != shownLanguage) {
+            shownLanguage = language
+            viewModel.load()
+        }
+    }
     // Back online: load what couldn't be loaded while offline (or refresh a stale feed).
     androidx.compose.runtime.LaunchedEffect(online) {
         if (online && !state.isLoading && state.shelves.isEmpty()) viewModel.load()
@@ -108,9 +118,9 @@ fun FeedScreen(
             item(key = "health") {
                 EmptyState(
                     Icons.Rounded.WifiOff,
-                    "Playback may not work right now",
-                    "YouTube seems to have changed something. Songs might skip until LiquidTube is updated.",
-                    action = "Check Again" to connection::recheckPlayback,
+                    tr("Playback may not work right now", "Oynatma şu anda çalışmayabilir"),
+                    tr("YouTube seems to have changed something. Songs might skip until LiquidTube is updated.", "YouTube bir değişiklik yaptı. LiquidTube güncellenene kadar şarkılar atlanabilir."),
+                    action = tr("Check Again", "Tekrar Kontrol Et") to connection::recheckPlayback,
                     modifier = Modifier.padding(vertical = 0.dp),
                 )
             }
@@ -120,13 +130,14 @@ fun FeedScreen(
             val auto = connection.downloads.autoIds.value
             val mine = downloaded.filter { it.id !in auto }
             val mix = (downloaded.filter { it.id in auto } + cachedNow.filter { c -> mine.none { it.id == c.id } }).distinctBy { it.id }
-            if (mix.isNotEmpty()) item(key = "offline-mix") { SongShelf("Offline Mix", mix, play) }
-            if (mine.isNotEmpty()) item(key = "offline-downloads") { SongShelf("Downloaded", mine, play) }
+            if (mix.isNotEmpty()) item(key = "offline-mix") { SongShelf(tr("Offline Mix", "Çevrimdışı Miks"), mix, play) }
+            if (mine.isNotEmpty()) item(key = "offline-downloads") { SongShelf(tr("Downloaded", "İndirilenler"), mine, play) }
         }
         if (onChip != null && state.chips.isNotEmpty() && online) {
             item(key = "chips") {
                 // "All" first, then YouTube Music's moods; tapping the selected one clears it.
-                val all = com.enes.innertube.models.HomeChip("All", "")
+                val allLabel = tr("All", "Tümü")
+                val all = com.enes.innertube.models.HomeChip(allLabel, "")
                 FilterChips(
                     options = listOf(all) + state.chips,
                     selected = state.selectedChip ?: all,
@@ -142,14 +153,14 @@ fun FeedScreen(
             item(key = "artist-releases") {
                 Box(Modifier.appear(0)) {
                     com.enes.liquidtube.ui.components.CollectionShelf(
-                        "New from Your Artists",
+                        tr("New from Your Artists", "Takip Ettiğiniz Sanatçılardan Yeni"),
                         releases.map { r -> r.item.copy(subtitle = r.artist) },
                     )
                 }
             }
         }
         if (showRecents && recents.isNotEmpty() && state.selectedChip == null) {
-            item(key = "recents") { Box(Modifier.appear(0)) { SongShelf("Recently Played", recents.take(15), play) } }
+            item(key = "recents") { Box(Modifier.appear(0)) { SongShelf(tr("Recently Played", "Son Çalınanlar"), recents.take(15), play) } }
         }
         // Home: the mix for this time of day, from what you play at this hour.
         if (style == FeedStyle.Home && state.selectedChip == null) {
@@ -167,9 +178,9 @@ fun FeedScreen(
             state.shelves.isEmpty() -> item {
                 EmptyState(
                     Icons.Rounded.WifiOff,
-                    "Couldn't load music",
-                    "Check your connection and try again.",
-                    action = "Try Again" to viewModel::load,
+                    tr("Couldn't load music", "Müzik yüklenemedi"),
+                    tr("Check your connection and try again.", "Bağlantınızı kontrol edip tekrar deneyin."),
+                    action = tr("Try Again", "Tekrar Deneyin") to viewModel::load,
                 )
             }
             else -> feedShelves(state.shelves, play, style)
@@ -197,9 +208,9 @@ private fun OfflineCard(downloads: Int) {
         Icon(Icons.Rounded.WifiOff, null, tint = c.accent, modifier = Modifier.size(28.dp))
         androidx.compose.foundation.layout.Spacer(Modifier.size(14.dp))
         androidx.compose.foundation.layout.Column {
-            androidx.compose.material3.Text("You’re offline", style = AppTheme.type.headline, color = c.label)
+            androidx.compose.material3.Text(tr("You’re offline", "Çevrimdışısınız"), style = AppTheme.type.headline, color = c.label)
             androidx.compose.material3.Text(
-                if (downloads > 0) "Your $downloads downloaded songs are ready to play." else "Download songs to listen without a connection.",
+                if (downloads > 0) tr("Your $downloads downloaded songs are ready to play.", "$downloads indirilen şarkınız çalmaya hazır.") else tr("Download songs to listen without a connection.", "İnternet bağlantısı olmadan dinlemek için şarkı indirin."),
                 style = AppTheme.type.subhead,
                 color = c.secondaryLabel,
             )
@@ -230,5 +241,5 @@ fun AccountButton() {
 
 @Composable
 fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
-    FeedScreen("Home", viewModel, showRecents = true, onChip = viewModel::selectChip)
+    FeedScreen(tr("Home", "Ana Sayfa"), viewModel, showRecents = true, onChip = viewModel::selectChip)
 }

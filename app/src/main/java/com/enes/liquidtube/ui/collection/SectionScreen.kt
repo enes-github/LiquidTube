@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.collection
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -130,6 +131,11 @@ class SectionViewModel @Inject constructor(
 /** Client-side sorting for a section. */
 private enum class SectionSort(val label: String) {
     Popular("Popular"), Newest("Newest"), Oldest("Oldest"), AtoZ("A–Z");
+
+    /** Shown on the chip, in the app's language. */
+    val shown: String get() = when (this) {
+        Popular -> tr("Popular", "Popüler"); Newest -> tr("Newest", "En Yeni"); Oldest -> tr("Oldest", "En Eski"); AtoZ -> "A–Z"
+    }
 }
 
 private val YEAR = Regex("""\b(19|20)\d{2}\b""")
@@ -192,8 +198,8 @@ fun SectionScreen(onBack: () -> Unit, viewModel: SectionViewModel = hiltViewMode
             item(key = "actions") {
                 PlayActionRow(
                     onPlay = { connection.play(shownSongs) },
-                    left = SideAction(Icons.Rounded.Shuffle, "Shuffle") { connection.shufflePlay(shownSongs) },
-                    right = SideAction(Icons.AutoMirrored.Rounded.PlaylistAdd, "Add All to Queue") {
+                    left = SideAction(Icons.Rounded.Shuffle, tr("Shuffle", "Karıştır")) { connection.shufflePlay(shownSongs) },
+                    right = SideAction(Icons.AutoMirrored.Rounded.PlaylistAdd, tr("Add All to Queue", "Tümünü Sıraya Ekle")) {
                         shownSongs.forEach(connection::addToQueue)
                     },
                 )
@@ -204,7 +210,7 @@ fun SectionScreen(onBack: () -> Unit, viewModel: SectionViewModel = hiltViewMode
                 FilterChips(
                     options = sorts,
                     selected = if (sort in sorts) sort else SectionSort.Popular,
-                    label = { it.label },
+                    label = { it.shown },
                     onSelect = { sort = it },
                     modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
                 )
@@ -214,10 +220,10 @@ fun SectionScreen(onBack: () -> Unit, viewModel: SectionViewModel = hiltViewMode
         when {
             state.isLoading -> item { LoadingBox() }
             state.error -> item {
-                EmptyState(Icons.Rounded.WifiOff, "Couldn't load", "Check your connection and try again.",
-                    action = "Try Again" to { viewModel.load() })
+                EmptyState(Icons.Rounded.WifiOff, tr("Couldn't load", "Yüklenemedi"), tr("Check your connection and try again.", "Bağlantınızı kontrol edip tekrar deneyin."),
+                    action = tr("Try Again", "Tekrar Dene") to { viewModel.load() })
             }
-            state.items.isEmpty() -> item { EmptyState(Icons.Rounded.LibraryMusic, "Nothing here", "This section is empty.") }
+            state.items.isEmpty() -> item { EmptyState(Icons.Rounded.LibraryMusic, tr("Nothing here", "Burada bir şey yok"), tr("This section is empty.", "Bu bölüm boş.")) }
             isSongs -> {
                 itemsIndexed(shownSongs, key = { _, s -> s.id }) { i, song ->
                     SongRow(

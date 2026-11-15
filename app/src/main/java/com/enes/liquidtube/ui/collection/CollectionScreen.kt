@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.collection
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.core.spring
@@ -321,9 +322,9 @@ fun CollectionScreen(onBack: () -> Unit, viewModel: CollectionViewModel = hiltVi
                 page != null -> AlbumPage(page, title, viewModel::loadMore, viewModel::load, viewModel)
                 state.isLoading -> LoadingBox(Modifier.statusBarsPadding().padding(top = 80.dp))
                 else -> EmptyState(
-                    Icons.Rounded.WifiOff, "Couldn't load", "Check your connection and try again.",
+                    Icons.Rounded.WifiOff, tr("Couldn't load", "Yüklenemedi"), tr("Check your connection and try again.", "Bağlantınızı kontrol edip tekrar deneyin."),
                     modifier = Modifier.statusBarsPadding().padding(top = 60.dp),
-                    action = "Try Again" to viewModel::load,
+                    action = tr("Try Again", "Tekrar Dene") to viewModel::load,
                 )
             }
         }
@@ -357,7 +358,7 @@ private fun Toolbar(page: BrowsePage?, title: TitleState, artist: ArtistState?, 
             .padding(top = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        GlassIconButton(backdrop, Icons.Rounded.ChevronLeft, "Back", onBack, tint = tint, iconSize = 30.dp)
+        GlassIconButton(backdrop, Icons.Rounded.ChevronLeft, tr("Back", "Geri"), onBack, tint = tint, iconSize = 30.dp)
         Spacer(Modifier.weight(1f))
         if (page != null && artist != null) {
             ArtistToolbarActions(page, artist, backdrop, tint)
@@ -419,7 +420,7 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
     val right = if (canSave) {
         SideAction(
             if (saved) Icons.Rounded.Check else Icons.Rounded.Add,
-            if (saved) "Added to Library" else "Add to Library",
+            if (saved) tr("Added to Library", "Kitaplığa Eklendi") else tr("Add to Library", "Kitaplığa Ekle"),
             active = saved,
         ) {
             saved = !saved
@@ -428,7 +429,7 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
     } else {
         SideAction(
             if (allDownloaded) Icons.Rounded.DownloadDone else Icons.Rounded.ArrowCircleDown,
-            when { allDownloaded -> "Downloaded"; downloading -> "Downloading"; else -> "Download" },
+            when { allDownloaded -> tr("Downloaded", "İndirildi"); downloading -> tr("Downloading", "İndiriliyor"); else -> tr("Download", "İndir") },
             enabled = page.songs.isNotEmpty() && !allDownloaded && !downloading,
             active = allDownloaded || downloading,
         ) { connection.downloads.download(page.songs) }
@@ -493,7 +494,7 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
                     Spacer(Modifier.height(16.dp))
                     PlayActionRow(
                         onPlay = if (page.songs.isNotEmpty()) ({ connection.play(page.songs) }) else null,
-                        left = SideAction(Icons.Rounded.Shuffle, "Shuffle", enabled = page.songs.isNotEmpty()) {
+                        left = SideAction(Icons.Rounded.Shuffle, tr("Shuffle", "Karıştır"), enabled = page.songs.isNotEmpty()) {
                             connection.shufflePlay(page.songs)
                         },
                         right = right,
@@ -503,18 +504,18 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
                             Modifier.padding(horizontal = Gutter).padding(bottom = 14.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            PlaylistPill(Icons.Rounded.Add, "Add Songs", accent = true) { nav.openAddSongs(ownId, page.title) }
-                            PlaylistPill(if (editing) Icons.Rounded.Check else Icons.Rounded.Edit, if (editing) "Done" else "Edit", active = editing) {
+                            PlaylistPill(Icons.Rounded.Add, tr("Add Songs", "Şarkı Ekle"), accent = true) { nav.openAddSongs(ownId, page.title) }
+                            PlaylistPill(if (editing) Icons.Rounded.Check else Icons.Rounded.Edit, if (editing) tr("Done", "Bitti") else tr("Edit", "Düzenle"), active = editing) {
                                 editing = !editing
                             }
                             if (editing) {
-                                PlaylistPill(Icons.Rounded.Edit, "Rename") {
+                                PlaylistPill(Icons.Rounded.Edit, tr("Rename", "Yeniden Adlandır")) {
                                     overlay.prompt(
                                         com.enes.liquidtube.ui.components.PromptSpec(
-                                            title = "Rename Playlist",
+                                            title = tr("Rename Playlist", "Çalma Listesini Yeniden Adlandır"),
                                             placeholder = page.title,
                                             initial = page.title,
-                                            confirm = "Rename",
+                                            confirm = tr("Rename", "Yeniden Adlandır"),
                                             onConfirm = { name -> connection.renamePlaylist(ownId, name, onReload) },
                                         )
                                     )
@@ -541,7 +542,7 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
                             )
                             if (!descriptionExpanded && desc.length > 120) {
                                 Spacer(Modifier.height(4.dp))
-                                Text("MORE", style = AppTheme.type.caption.copy(fontWeight = FontWeight.Bold), color = c.label)
+                                Text(tr("MORE", "DAHA FAZLA"), style = AppTheme.type.caption.copy(fontWeight = FontWeight.Bold), color = c.label)
                             }
                         }
                     }
@@ -582,9 +583,9 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
                 item(key = "empty") {
                     EmptyState(
                         Icons.Rounded.MusicNote,
-                        if (page.editable) "No songs yet" else "Nothing to play",
-                        if (page.editable) "Tap Add Songs to search for music, or pick from the suggestions below."
-                        else "This page doesn’t have any songs.",
+                        if (page.editable) tr("No songs yet", "Henüz şarkı yok") else tr("Nothing to play", "Çalacak bir şey yok"),
+                        if (page.editable) tr("Tap Add Songs to search for music, or pick from the suggestions below.", "Müzik aramak için Şarkı Ekle'ye dokunun veya aşağıdaki önerilerden seçin.")
+                        else tr("This page doesn’t have any songs.", "Bu sayfada şarkı yok."),
                     )
                 }
             }
@@ -603,7 +604,7 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
                     showDivider = i != page.songs.lastIndex,
                     showDuration = isAlbum,
                     menuExtra = if (page.editable && page.playlistId != null && song.setVideoId != null) listOf(
-                        MenuAction("Remove from Playlist", Icons.Rounded.RemoveCircleOutline, destructive = true) {
+                        MenuAction(tr("Remove from Playlist", "Çalma Listesinden Kaldır"), Icons.Rounded.RemoveCircleOutline, destructive = true) {
                             connection.removeFromPlaylist(page.playlistId!!, song, onReload)
                         },
                     ) else emptyList(),
@@ -657,16 +658,16 @@ private fun AlbumPage(page: BrowsePage, title: TitleState, onLoadMore: () -> Uni
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text("Suggested Songs", style = AppTheme.type.title3.copy(fontWeight = FontWeight.Bold), color = c.label)
+                            Text(tr("Suggested Songs", "Önerilen Şarkılar"), style = AppTheme.type.title3.copy(fontWeight = FontWeight.Bold), color = c.label)
                             Text(
-                                if (page.songs.isEmpty()) "Based on the name and what you listen to" else "Based on what you’ve added",
+                                if (page.songs.isEmpty()) tr("Based on the name and what you listen to", "Ada ve dinlediklerinize göre") else tr("Based on what you’ve added", "Eklediklerinize göre"),
                                 style = AppTheme.type.footnote, color = c.secondaryLabel,
                             )
                         }
                         Box(
                             Modifier.size(40.dp).clip(CircleShape).clickable { viewModel.refreshSuggestions(force = true) },
                             contentAlignment = Alignment.Center,
-                        ) { Icon(Icons.Rounded.Refresh, "More Suggestions", tint = c.accent, modifier = Modifier.size(22.dp)) }
+                        ) { Icon(Icons.Rounded.Refresh, tr("More Suggestions", "Daha Fazla Öneri"), tint = c.accent, modifier = Modifier.size(22.dp)) }
                     }
                 }
                 val list = suggestions
@@ -747,7 +748,7 @@ internal fun AddCircle(added: Boolean = false, onAdd: () -> Unit) {
         ) {
             Icon(
                 if (added) Icons.Rounded.Check else Icons.Rounded.Add,
-                if (added) "Added" else "Add",
+                if (added) tr("Added", "Eklendi") else tr("Add", "Ekle"),
                 tint = if (added) c.secondaryLabel else c.accent,
                 modifier = Modifier.size(18.dp),
             )
@@ -789,11 +790,11 @@ private fun PageActions(page: BrowsePage, backdrop: GlassBackdrop, tint: Color, 
         val playlistId = page.playlistId ?: page.browseId.takeIf { page.type == CollectionType.ALBUM }
         val quick = buildList {
             if (page.songs.isNotEmpty()) {
-                add(MenuAction("Play", Icons.Rounded.PlayArrow) { connection.play(page.songs) })
-                add(MenuAction("Shuffle", Icons.Rounded.Shuffle) { connection.shufflePlay(page.songs) })
-                add(MenuAction("Play Last", Icons.AutoMirrored.Rounded.PlaylistAdd) { page.songs.forEach(connection::addToQueue) })
+                add(MenuAction(tr("Play", "Çal"), Icons.Rounded.PlayArrow) { connection.play(page.songs) })
+                add(MenuAction(tr("Shuffle", "Karıştır"), Icons.Rounded.Shuffle) { connection.shufflePlay(page.songs) })
+                add(MenuAction(tr("Play Last", "Sona Ekle"), Icons.AutoMirrored.Rounded.PlaylistAdd) { page.songs.forEach(connection::addToQueue) })
             }
-            add(MenuAction("Share", Icons.Rounded.Share) {
+            add(MenuAction(tr("Share", "Paylaş"), Icons.Rounded.Share) {
                 val url = if (page.type == CollectionType.ALBUM) "https://music.youtube.com/browse/${page.browseId}"
                 else "https://music.youtube.com/playlist?list=${page.browseId.removePrefix("VL")}"
                 connection.share(page.title, url)
@@ -801,36 +802,36 @@ private fun PageActions(page: BrowsePage, backdrop: GlassBackdrop, tint: Color, 
         }
         val library = buildList {
             if (loggedIn && playlistId != null && !page.editable && page.browseId.removePrefix("VL") !in setOf("LM", "SE")) {
-                add(MenuAction("Add to Library", Icons.Rounded.LibraryAdd) { connection.savePlaylist(playlistId, true) })
-                add(MenuAction("Remove from Library", Icons.Rounded.RemoveCircleOutline) { connection.savePlaylist(playlistId, false) })
+                add(MenuAction(tr("Add to Library", "Kitaplığa Ekle"), Icons.Rounded.LibraryAdd) { connection.savePlaylist(playlistId, true) })
+                add(MenuAction(tr("Remove from Library", "Kitaplıktan Kaldır"), Icons.Rounded.RemoveCircleOutline) { connection.savePlaylist(playlistId, false) })
             }
             if (loggedIn && page.songs.isNotEmpty()) {
-                add(MenuAction("Add All to a Playlist…", Icons.AutoMirrored.Rounded.PlaylistAdd) { overlay.addToPlaylist(page.songs) })
+                add(MenuAction(tr("Add All to a Playlist…", "Tümünü Çalma Listesine Ekle…"), Icons.AutoMirrored.Rounded.PlaylistAdd) { overlay.addToPlaylist(page.songs) })
             }
             if (page.songs.isNotEmpty()) {
-                add(MenuAction("Download", Icons.Rounded.ArrowCircleDown) { connection.downloads.download(page.songs) })
+                add(MenuAction(tr("Download", "İndir"), Icons.Rounded.ArrowCircleDown) { connection.downloads.download(page.songs) })
             }
         }
         val edit = buildList {
             if (page.editable && playlistId != null) {
-                add(MenuAction("Rename Playlist", Icons.Rounded.Edit) {
+                add(MenuAction(tr("Rename Playlist", "Çalma Listesini Yeniden Adlandır"), Icons.Rounded.Edit) {
                     overlay.prompt(
                         PromptSpec(
-                            title = "Rename Playlist",
+                            title = tr("Rename Playlist", "Çalma Listesini Yeniden Adlandır"),
                             initial = page.title,
-                            placeholder = "Playlist Name",
-                            confirm = "Save",
+                            placeholder = tr("Playlist Name", "Çalma Listesi Adı"),
+                            confirm = tr("Save", "Kaydet"),
                             onConfirm = { name -> connection.renamePlaylist(playlistId, name, onChanged) },
                         )
                     )
                 })
-                add(MenuAction("Delete Playlist", Icons.Rounded.Delete, destructive = true) {
+                add(MenuAction(tr("Delete Playlist", "Çalma Listesini Sil"), Icons.Rounded.Delete, destructive = true) {
                     overlay.prompt(
                         PromptSpec(
                             title = "Delete “${page.title}”?",
-                            message = "Type DELETE to confirm. This removes it from your YouTube Music account.",
+                            message = tr("Type DELETE to confirm. This removes it from your YouTube Music account.", "Onaylamak için DELETE yazın. Bu, listeyi YouTube Music hesabınızdan kaldırır."),
                             placeholder = "DELETE",
-                            confirm = "Delete",
+                            confirm = tr("Delete", "Sil"),
                             destructive = true,
                             onConfirm = { typed -> if (typed.equals("delete", true)) connection.deletePlaylist(playlistId, onDeleted) },
                         )
@@ -840,7 +841,7 @@ private fun PageActions(page: BrowsePage, backdrop: GlassBackdrop, tint: Color, 
         }
         val go = buildList {
             page.straplineId?.let { id ->
-                add(MenuAction("Go to Artist", Icons.Rounded.Person) { nav.openCollection(id) })
+                add(MenuAction(tr("Go to Artist", "Sanatçıya Git"), Icons.Rounded.Person) { nav.openCollection(id) })
             }
         }
         return MenuSpec(

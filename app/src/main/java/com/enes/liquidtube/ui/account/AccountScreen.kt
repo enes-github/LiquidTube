@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.account
 
+import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.HorizontalDivider
 import kotlinx.coroutines.launch
@@ -70,8 +71,8 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
     val dataSaver by connection.settings.dataSaver.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        BackRow("Back", onBack)
-        LargeTitle("Account", withStatusBar = false)
+        BackRow(tr("Back", "Geri"), onBack)
+        LargeTitle(tr("Account", "Hesap"), withStatusBar = false)
         Spacer(Modifier.height(24.dp))
 
         Column(
@@ -90,34 +91,34 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             Spacer(Modifier.height(14.dp))
 
             if (loggedIn) {
-                Text(account?.name ?: "Signed in", style = AppTheme.type.title2, color = c.label)
+                Text(account?.name ?: tr("Signed in", "Giriş yapıldı"), style = AppTheme.type.title2, color = c.label)
                 account?.handle?.let { Text(it, style = AppTheme.type.subhead, color = c.secondaryLabel) }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Home, Library and Liked Songs come from your YouTube Music account. Favoriting a song also likes it there.",
+                    tr("Home, Library and Liked Songs come from your YouTube Music account. Favoriting a song also likes it there.", "Ana Sayfa, Kitaplık ve Beğenilen Şarkılar YouTube Music hesabınızdan gelir. Bir şarkıyı favorilere eklemek onu orada da beğenir."),
                     style = AppTheme.type.footnote,
                     color = c.secondaryLabel,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(28.dp))
-                WideButton("Sign Out", destructive = true) { auth.logout() }
+                WideButton(tr("Sign Out", "Çıkış Yap"), destructive = true) { auth.logout() }
             } else {
-                Text("Not signed in", style = AppTheme.type.title2, color = c.label)
+                Text(tr("Not signed in", "Giriş yapılmadı"), style = AppTheme.type.title2, color = c.label)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Sign in with your Google account to get your personal YouTube Music home, playlists, albums, artists and liked songs.",
+                    tr("Sign in with your Google account to get your personal YouTube Music home, playlists, albums, artists and liked songs.", "Kişisel YouTube Music ana sayfanız, çalma listeleriniz, albümleriniz, sanatçılarınız ve beğendiğiniz şarkılar için Google hesabınızla giriş yapın."),
                     style = AppTheme.type.footnote,
                     color = c.secondaryLabel,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(28.dp))
-                WideButton("Sign in with Google", onClick = onSignIn)
+                WideButton(tr("Sign in with Google", "Google ile Giriş Yap"), onClick = onSignIn)
             }
         }
 
         Spacer(Modifier.height(36.dp))
         Text(
-            "PLAYBACK",
+            tr("PLAYBACK", "OYNATMA"),
             style = AppTheme.type.footnote,
             color = c.secondaryLabel,
             modifier = Modifier.padding(horizontal = Gutter + 16.dp, vertical = 6.dp),
@@ -134,9 +135,9 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Data Saver", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Data Saver", "Veri Tasarrufu"), style = AppTheme.type.body, color = c.label)
                     Text(
-                        "Stream at the lowest quality to save mobile data.",
+                        tr("Stream at the lowest quality to save mobile data.", "Mobil veriden tasarruf için en düşük kalitede çal."),
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
                 }
@@ -147,7 +148,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 )
             }
         }
-        SettingsGroup("OFFLINE MIX") {
+        SettingsGroup(tr("OFFLINE MIX", "ÇEVRİMDIŞI MİKS")) {
             val smart by connection.settings.smartDownloads.collectAsStateWithLifecycle()
             val size by connection.settings.smartSize.collectAsStateWithLifecycle()
             val cellular by connection.settings.smartOnCellular.collectAsStateWithLifecycle()
@@ -156,9 +157,9 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Smart Downloads", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Smart Downloads", "Akıllı İndirmeler"), style = AppTheme.type.body, color = c.label)
                     Text(
-                        "Keeps your favorites, liked and most-played songs downloaded automatically, so there is always music offline.",
+                        tr("Keeps your favorites, liked and most-played songs downloaded automatically, so there is always music offline.", "Favorilerinizi, beğendiklerinizi ve en çok dinlediklerinizi otomatik indirir; böylece çevrimdışıyken de hep müzik olur."),
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
                 }
@@ -173,12 +174,12 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
             if (smart) {
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    Text("Mix Size", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Mix Size", "Miks Boyutu"), style = AppTheme.type.body, color = c.label)
                     Spacer(Modifier.height(8.dp))
                     com.enes.liquidtube.ui.components.FilterChips(
                         options = listOf(25, 50, 100, 200),
                         selected = size,
-                        label = { "$it songs" },
+                        label = { tr("$it songs", "$it şarkı") },
                         onSelect = { connection.settings.setSmartSize(it); connection.smart.refresh() },
                         edge = 0.dp,
                     )
@@ -188,8 +189,8 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Use Mobile Data", style = AppTheme.type.body, color = c.label)
-                        Text("Off: the mix only downloads on Wi-Fi.", style = AppTheme.type.footnote, color = c.secondaryLabel)
+                        Text(tr("Use Mobile Data", "Mobil Veri Kullan"), style = AppTheme.type.body, color = c.label)
+                        Text(tr("Off: the mix only downloads on Wi-Fi.", "Kapalı: miks yalnızca Wi-Fi'da indirilir."), style = AppTheme.type.footnote, color = c.secondaryLabel)
                     }
                     Switch(
                         checked = cellular,
@@ -200,16 +201,16 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
-        SettingsGroup("LISTENING CACHE") {
+        SettingsGroup(tr("LISTENING CACHE", "DİNLEME ÖNBELLEĞİ")) {
             val cacheMb by connection.settings.cacheSizeMb.collectAsStateWithLifecycle()
             val used by connection.playCache.bytesUsed.collectAsStateWithLifecycle()
             val cachedCount = connection.playCache.cached.collectAsStateWithLifecycle().value.size
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
                 val mb = used / 1_048_576f
                 val usedText = if (mb >= 1024f) "%.1f GB".format(mb / 1024f) else "%.0f MB".format(mb)
-                Text("$usedText used \u00B7 $cachedCount ${if (cachedCount == 1) "song" else "songs"} ready offline", style = AppTheme.type.body, color = c.label)
+                Text(tr("$usedText used \u00B7 $cachedCount ${if (cachedCount == 1) "song" else "songs"} ready offline", "$usedText kullan\u0131l\u0131yor \u00B7 $cachedCount \u015Fark\u0131 \u00E7evrimd\u0131\u015F\u0131 haz\u0131r"), style = AppTheme.type.body, color = c.label)
                 Text(
-                    "Every song you play is saved as it streams, so it works offline afterwards. The least recently played go first when it\u2019s full.",
+                    tr("Every song you play is saved as it streams, so it works offline afterwards. The least recently played go first when it\u2019s full.", "Çaldığınız her şarkı çalarken kaydedilir, böylece sonra çevrimdışı da çalar. Dolunca en uzun süredir çalınmayanlar silinir."),
                     style = AppTheme.type.footnote, color = c.secondaryLabel,
                 )
                 Spacer(Modifier.height(10.dp))
@@ -222,7 +223,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Clear Cache",
+                    tr("Clear Cache", "Önbelleği Temizle"),
                     style = AppTheme.type.body,
                     color = c.accent,
                     modifier = Modifier.clickable { connection.playCache.clear() }.padding(vertical = 8.dp),
@@ -230,7 +231,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
-        SettingsGroup("LYRICS") {
+        SettingsGroup(tr("LYRICS", "ŞARKI SÖZLERİ")) {
             val lockLyrics by connection.settings.lockScreenLyrics.collectAsStateWithLifecycle()
             val translateTo by connection.settings.translateTo.collectAsStateWithLifecycle()
             Row(
@@ -238,9 +239,9 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Lyrics on Lock Screen", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Lyrics on Lock Screen", "Kilit Ekranında Sözler"), style = AppTheme.type.body, color = c.label)
                     Text(
-                        "The line being sung shows under the song title on the lock screen and in the notification.",
+                        tr("The line being sung shows under the song title on the lock screen and in the notification.", "Söylenen satır, kilit ekranında ve bildirimde şarkı adının altında görünür."),
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
                 }
@@ -251,9 +252,9 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 )
             }
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Text("Translate Lyrics To", style = AppTheme.type.body, color = c.label)
+                Text(tr("Translate Lyrics To", "Sözleri Şu Dile Çevir"), style = AppTheme.type.body, color = c.label)
                 Text(
-                    "Tap the translate button above the lyrics to show a translation under each line.",
+                    tr("Tap the translate button above the lyrics to show a translation under each line.", "Her satırın altında çeviri görmek için sözlerin üstündeki çeviri düğmesine dokunun."),
                     style = AppTheme.type.footnote, color = c.secondaryLabel,
                 )
                 Spacer(Modifier.height(10.dp))
@@ -261,7 +262,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                     options = com.enes.liquidtube.data.LyricsTranslator.LANGUAGES,
                     selected = com.enes.liquidtube.data.LyricsTranslator.LANGUAGES.firstOrNull { it.first == translateTo }
                         ?: com.enes.liquidtube.data.LyricsTranslator.LANGUAGES.first(),
-                    label = { it.second },
+                    label = { tr(it.second, TRANSLATE_LANG_TR[it.first] ?: it.second) },
                     onSelect = { connection.settings.setTranslateTo(it.first) },
                     edge = 0.dp,
                 )
@@ -277,19 +278,19 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                     }
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Text("Screen Saver While Charging", style = AppTheme.type.body, color = c.accent)
+                Text(tr("Screen Saver While Charging", "Şarj Olurken Ekran Koruyucu"), style = AppTheme.type.body, color = c.accent)
                 Text(
-                    "Shows the cover and the lyrics while your phone charges. Tap, then choose LiquidTube as the screen saver.",
+                    tr("Shows the cover and the lyrics while your phone charges. Tap, then choose LiquidTube as the screen saver.", "Telefonunuz şarj olurken kapağı ve sözleri gösterir. Dokunun, ardından ekran koruyucu olarak LiquidTube'u seçin."),
                     style = AppTheme.type.footnote, color = c.secondaryLabel,
                 )
             }
         }
 
-        SettingsGroup("SOUND") {
+        SettingsGroup(tr("SOUND", "SES")) {
             val eq by connection.settings.eqPreset.collectAsStateWithLifecycle()
             val soundCheck by connection.settings.soundCheck.collectAsStateWithLifecycle()
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Text("Equalizer", style = AppTheme.type.body, color = c.label)
+                Text(tr("Equalizer", "Ekolayzır"), style = AppTheme.type.body, color = c.label)
                 Spacer(Modifier.height(10.dp))
                 com.enes.liquidtube.ui.components.FilterChips(
                     options = com.enes.liquidtube.playback.AudioFx.PRESETS,
@@ -304,8 +305,8 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Sound Check", style = AppTheme.type.body, color = c.label)
-                    Text("Plays every song at the same volume, using YouTube’s loudness data.", style = AppTheme.type.footnote, color = c.secondaryLabel)
+                    Text(tr("Sound Check", "Ses Dengeleme"), style = AppTheme.type.body, color = c.label)
+                    Text(tr("Plays every song at the same volume, using YouTube’s loudness data.", "YouTube'un ses yüksekliği verisiyle her şarkıyı aynı seviyede çalar."), style = AppTheme.type.footnote, color = c.secondaryLabel)
                 }
                 Switch(
                     checked = soundCheck,
@@ -315,7 +316,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
-        SettingsGroup("AUTOMATIC") {
+        SettingsGroup(tr("AUTOMATIC", "OTOMATİK")) {
             val autoResume by connection.settings.autoResume.collectAsStateWithLifecycle()
             val context = androidx.compose.ui.platform.LocalContext.current
             // Android 12+: the Nearby devices permission lets it resume even when LiquidTube is closed.
@@ -331,9 +332,9 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Resume Automatically", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Resume Automatically", "Otomatik Devam Et"), style = AppTheme.type.body, color = c.label)
                     Text(
-                        "Pick up where you left off when you connect headphones, a Bluetooth speaker or your car (if you paused in the last 4 hours).",
+                        tr("Pick up where you left off when you connect headphones, a Bluetooth speaker or your car (if you paused in the last 4 hours).", "Kulaklık, Bluetooth hoparlör veya araba bağlandığında kaldığınız yerden devam eder (son 4 saat içinde durdurduysanız)."),
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
                 }
@@ -348,7 +349,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
             if (autoResume && !btGranted) {
                 Text(
-                    "Allow Nearby devices so it also works when LiquidTube is closed",
+                    tr("Allow Nearby devices so it also works when LiquidTube is closed", "LiquidTube kapalıyken de çalışması için Yakındaki cihazlar iznini verin"),
                     style = AppTheme.type.footnote.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
                     color = c.accent,
                     modifier = Modifier
@@ -363,9 +364,9 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("New Release Alerts", style = AppTheme.type.body, color = c.label)
+                    Text(tr("New Release Alerts", "Yeni Çıkış Bildirimleri"), style = AppTheme.type.body, color = c.label)
                     Text(
-                        "A notification when artists you follow put out something new. They also show on the New tab.",
+                        tr("A notification when artists you follow put out something new. They also show on the New tab.", "Takip ettiğiniz sanatçılar yeni bir şey çıkardığında bildirim gelir. Yeni sekmesinde de görünür."),
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
                 }
@@ -377,22 +378,22 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
-        SettingsGroup("STATIONS") {
+        SettingsGroup(tr("STATIONS", "İSTASYONLAR")) {
             val style by connection.settings.stationStyle.collectAsStateWithLifecycle()
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Text(
                     when (style) {
-                        "familiar" -> "Familiar"
-                        "discovery" -> "Discovery"
-                        else -> "Balanced"
+                        "familiar" -> tr("Familiar", "Tanıdık")
+                        "discovery" -> tr("Discovery", "Keşif")
+                        else -> tr("Balanced", "Dengeli")
                     },
                     style = AppTheme.type.body, color = c.label,
                 )
                 Text(
                     when (style) {
-                        "familiar" -> "Stations and Autoplay mix in your favorites and most-played songs."
-                        "discovery" -> "Stations and Autoplay skip songs you already play a lot, so you hear new music."
-                        else -> "Stations play YouTube Music’s radio as it is."
+                        "familiar" -> tr("Stations and Autoplay mix in your favorites and most-played songs.", "İstasyonlar ve Otomatik Oynatma, favorilerinizi ve en çok dinlediklerinizi karıştırır.")
+                        "discovery" -> tr("Stations and Autoplay skip songs you already play a lot, so you hear new music.", "İstasyonlar ve Otomatik Oynatma çok dinlediğiniz şarkıları atlar, böylece yeni müzik duyarsınız.")
+                        else -> tr("Stations play YouTube Music’s radio as it is.", "İstasyonlar YouTube Music radyosunu olduğu gibi çalar.")
                     },
                     style = AppTheme.type.footnote, color = c.secondaryLabel,
                 )
@@ -407,33 +408,33 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
-        SettingsGroup("CROSSFADE") {
+        SettingsGroup(tr("CROSSFADE", "GEÇİŞ EFEKTİ")) {
             val crossfade by connection.settings.crossfadeSeconds.collectAsStateWithLifecycle()
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Text(
-                    if (crossfade == 0) "Off — gapless" else "$crossfade seconds",
+                    if (crossfade == 0) tr("Off — gapless", "Kapalı — boşluksuz") else tr("$crossfade seconds", "$crossfade saniye"),
                     style = AppTheme.type.body, color = c.label,
                 )
                 Text(
-                    "Fade songs into each other, like AutoMix. Off plays albums gaplessly.",
+                    tr("Fade songs into each other, like AutoMix. Off plays albums gaplessly.", "Şarkıları AutoMix gibi birbirine geçirir. Kapalıyken albümler boşluksuz çalar."),
                     style = AppTheme.type.footnote, color = c.secondaryLabel,
                 )
                 Spacer(Modifier.height(10.dp))
                 com.enes.liquidtube.ui.components.FilterChips(
                     options = listOf(0, 3, 6, 9, 12),
                     selected = crossfade,
-                    label = { if (it == 0) "Off" else "${it}s" },
+                    label = { if (it == 0) tr("Off", "Kapalı") else "${it}s" },
                     onSelect = connection.settings::setCrossfadeSeconds,
                     edge = 0.dp,
                 )
             }
         }
 
-        SettingsGroup("APPEARANCE") {
+        SettingsGroup(tr("APPEARANCE", "GÖRÜNÜM")) {
             val accent by connection.settings.accent.collectAsStateWithLifecycle()
             val refraction by connection.settings.glassRefraction.collectAsStateWithLifecycle()
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Text("Accent Color", style = AppTheme.type.body, color = c.label)
+                Text(tr("Accent Color", "Vurgu Rengi"), style = AppTheme.type.body, color = c.label)
                 Spacer(Modifier.height(10.dp))
                 Row(
                     Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
@@ -463,13 +464,13 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                     ) {
                         Icon(
                             if (accent == artwork) Icons.Rounded.Check else Icons.Rounded.Image,
-                            "From Artwork", tint = Color.White, modifier = Modifier.size(if (accent == artwork) 20.dp else 17.dp),
+                            tr("From Artwork", "Kapaktan"), tint = Color.White, modifier = Modifier.size(if (accent == artwork) 20.dp else 17.dp),
                         )
                     }
                 }
                 if (accent == com.enes.liquidtube.ui.theme.ACCENT_ARTWORK) {
                     Spacer(Modifier.height(6.dp))
-                    Text("Follows the colours of the cover that’s playing.", style = AppTheme.type.footnote, color = c.secondaryLabel)
+                    Text(tr("Follows the colours of the cover that’s playing.", "Çalan şarkının kapak renklerini izler."), style = AppTheme.type.footnote, color = c.secondaryLabel)
                 }
             }
             Row(
@@ -477,9 +478,9 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Glass Refraction", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Glass Refraction", "Cam Kırılması"), style = AppTheme.type.body, color = c.label)
                     Text(
-                        "Bend light at the edges of glass. Turn off for plain frosted glass and longer battery life.",
+                        tr("Bend light at the edges of glass. Turn off for plain frosted glass and longer battery life.", "Camın kenarlarında ışığı büker. Düz buzlu cam ve daha uzun pil ömrü için kapatın."),
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
                 }
@@ -491,16 +492,37 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
-        SettingsGroup("AUDIO QUALITY") {
+        SettingsGroup(tr("LANGUAGE", "DİL")) {
+            val appLanguage by connection.settings.appLanguage.collectAsStateWithLifecycle()
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Text(tr("App Language", "Uygulama Dili"), style = AppTheme.type.body, color = c.label)
+                Text(
+                    tr("The language of the app, and of YouTube Music’s recommendations and charts.",
+                        "Uygulamanın ve YouTube Music önerilerinin, listelerinin dili."),
+                    style = AppTheme.type.footnote, color = c.secondaryLabel,
+                )
+                Spacer(Modifier.height(10.dp))
+                val options = com.enes.liquidtube.data.SettingsStore.SUPPORTED_LANGUAGES
+                com.enes.liquidtube.ui.components.FilterChips(
+                    options = options,
+                    selected = options.firstOrNull { it.code == appLanguage } ?: options.first(),
+                    label = { opt -> if (opt.code.isEmpty()) tr("Phone Language", "Telefon Dili") else opt.nativeName },
+                    onSelect = { opt -> connection.settings.setAppLanguage(opt.code) },
+                    edge = 0.dp,
+                )
+            }
+        }
+
+        SettingsGroup(tr("AUDIO QUALITY", "SES KALİTESİ")) {
             val premiumOn by connection.settings.premiumAudio.collectAsStateWithLifecycle()
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Premium Audio (256kbps)", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Premium Audio (256kbps)", "Premium Ses (256kbps)"), style = AppTheme.type.body, color = c.label)
                     Text(
-                        "Uses your YouTube Music Premium streams. Falls back to standard quality (~150kbps) whenever YouTube blocks them.",
+                        tr("Uses your YouTube Music Premium streams. Falls back to standard quality (~150kbps) whenever YouTube blocks them.", "YouTube Music Premium yayınlarınızı kullanır. YouTube engellediğinde standart kaliteye (~150kbps) döner."),
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
                 }
@@ -515,12 +537,12 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 val upgrading by connection.upgrader.running.collectAsStateWithLifecycle()
                 val upgraded = connection.quality.premiumIds.collectAsStateWithLifecycle().value.size
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
-                    Text("Upgrade Saved Songs", style = AppTheme.type.body, color = c.label)
+                    Text(tr("Upgrade Saved Songs", "Kayıtlı Şarkıları Yükselt"), style = AppTheme.type.body, color = c.label)
                     Text(
                         when {
-                            upgrading -> "Upgrading to 256kbps\u2026 $pending left"
-                            pending > 0 -> "$pending saved songs will be upgraded to 256kbps on Wi-Fi. $upgraded already are."
-                            else -> "All saved songs are 256kbps ($upgraded)."
+                            upgrading -> tr("Upgrading to 256kbps\u2026 $pending left", "256kbps'e yükseltiliyor… $pending kaldı")
+                            pending > 0 -> tr("$pending saved songs will be upgraded to 256kbps on Wi-Fi. $upgraded already are.", "$pending kayıtlı şarkı Wi-Fi'da 256kbps'e yükseltilecek. $upgraded tanesi zaten yükseltildi.")
+                            else -> tr("All saved songs are 256kbps ($upgraded).", "Tüm kayıtlı şarkılar 256kbps ($upgraded).")
                         },
                         style = AppTheme.type.footnote, color = c.secondaryLabel,
                     )
@@ -528,8 +550,8 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
         Text(
-            if (loggedIn) "Premium Audio needs a signed-in YouTube Music Premium account."
-            else "Sign in to use Premium Audio.",
+            if (loggedIn) tr("Premium Audio needs a signed-in YouTube Music Premium account.", "Premium Ses için YouTube Music Premium hesabıyla giriş yapılmalı.")
+            else tr("Sign in to use Premium Audio.", "Premium Ses için giriş yapın."),
             style = AppTheme.type.footnote,
             color = c.secondaryLabel,
             modifier = Modifier.padding(horizontal = Gutter + 16.dp, vertical = 8.dp),
@@ -545,8 +567,8 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
         ) { uri ->
             if (uri != null) scope.launch {
                 com.enes.liquidtube.data.Backup.export(context, uri)
-                    .onSuccess { toast("Backup saved") }
-                    .onFailure { toast("Couldn\u2019t save the backup") }
+                    .onSuccess { toast(tr("Backup saved", "Yedek kaydedildi")) }
+                    .onFailure { toast(tr("Couldn\u2019t save the backup", "Yedek kaydedilemedi")) }
             }
         }
         val importer = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -554,17 +576,17 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
         ) { uri ->
             if (uri != null) overlay.prompt(
                 com.enes.liquidtube.ui.components.PromptSpec(
-                    title = "Restore Backup?",
-                    message = "This replaces your favorites, stats, history and settings with the backup\u2019s. LiquidTube restarts afterwards. Type RESTORE to continue.",
+                    title = tr("Restore Backup?", "Yedek Geri Yüklensin mi?"),
+                    message = tr("This replaces your favorites, stats, history and settings with the backup\u2019s. LiquidTube restarts afterwards. Type RESTORE to continue.", "Favorileriniz, istatistikleriniz, geçmişiniz ve ayarlarınız yedektekilerle değiştirilir. Ardından LiquidTube yeniden başlar. Devam etmek için RESTORE yazın."),
                     placeholder = "RESTORE",
-                    confirm = "Restore",
+                    confirm = tr("Restore", "Geri Yükle"),
                     destructive = true,
                     onConfirm = { typed ->
                         if (typed.trim().equals("restore", ignoreCase = true)) scope.launch {
                             com.enes.liquidtube.data.Backup.restore(context, uri)
                                 // Restart straight away: nothing in memory may write over the restored data.
                                 .onSuccess { com.enes.liquidtube.data.Backup.restart(context) }
-                                .onFailure { toast("That file isn\u2019t an LiquidTube backup") }
+                                .onFailure { toast(tr("That file isn\u2019t an LiquidTube backup", "Bu dosya bir LiquidTube yedeği değil")) }
                         }
                     },
                 )
@@ -581,25 +603,25 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                     .onSuccess {
                         val t = com.enes.liquidtube.data.AutoBackup.target.value
                         if (t != null && com.enes.liquidtube.data.AutoBackup.isLocal(t)) {
-                            toast("That\u2019s on this phone, not online. Tap Change\u2026 and pick Drive from the \u2630 menu.")
-                        } else toast("Backing up to ${t?.where ?: "the cloud"} every day")
+                            toast(tr("That\u2019s on this phone, not online. Tap Change\u2026 and pick Drive from the \u2630 menu.", "Bu dosya çevrimiçi değil, telefonda. Değiştir…'e dokunup ☰ menüsünden Drive'ı seçin."))
+                        } else toast(tr("Backing up to ${t?.where ?: "the cloud"} every day", "Her gün ${t?.where ?: "buluta"} yedekleniyor"))
                     }
-                    .onFailure { toast("Couldn’t write to that file") }
+                    .onFailure { toast(tr("Couldn’t write to that file", "Bu dosyaya yazılamadı")) }
             }
         }
-        SettingsGroup("BACKUP") {
+        SettingsGroup(tr("BACKUP", "YEDEKLEME")) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Text("Online Backup", style = AppTheme.type.body, color = c.label)
+                Text(tr("Online Backup", "Çevrimiçi Yedekleme"), style = AppTheme.type.body, color = c.label)
                 val t = autoTarget
                 Text(
-                    if (t == null) "Keep a backup in Google Drive, updated every day. On the next screen, tap \u2630 (top left), choose Drive, pick a folder and tap Save."
+                    if (t == null) tr("Keep a backup in Google Drive, updated every day. On the next screen, tap \u2630 (top left), choose Drive, pick a folder and tap Save.", "Google Drive'da her gün güncellenen bir yedek tutun. Sonraki ekranda ☰'ye (sol üst) dokunun, Drive'ı ve bir klasör seçip Kaydet'e dokunun.")
                     else buildString {
-                        appendLine("${t.where.ifBlank { "Saved" }} · ${t.name}")
+                        appendLine("${t.where.ifBlank { tr("Saved", "Kaydedildi") }} · ${t.name}")
                         append(
                             when {
-                                t.lastFailed -> "The last backup didn’t go through. It’ll try again."
-                                t.lastAt > 0 -> "Last backed up " + android.text.format.DateUtils.getRelativeTimeSpanString(t.lastAt, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS)
-                                else -> "Not backed up yet"
+                                t.lastFailed -> tr("The last backup didn’t go through. It’ll try again.", "Son yedekleme başarısız oldu. Tekrar denenecek.")
+                                t.lastAt > 0 -> tr("Last backed up ", "Son yedekleme: ") + android.text.format.DateUtils.getRelativeTimeSpanString(t.lastAt, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS)
+                                else -> tr("Not backed up yet", "Henüz yedeklenmedi")
                             }
                         )
                     },
@@ -608,53 +630,53 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                 if (t != null && com.enes.liquidtube.data.AutoBackup.isLocal(t)) {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "This file is only on this phone, so it isn\u2019t online. Tap Change\u2026 and choose Drive from the \u2630 menu.",
+                        tr("This file is only on this phone, so it isn\u2019t online. Tap Change\u2026 and choose Drive from the \u2630 menu.", "Bu dosya yalnızca bu telefonda, çevrimiçi değil. Değiştir…'e dokunup ☰ menüsünden Drive'ı seçin."),
                         style = AppTheme.type.footnote.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
                         color = c.accent,
                     )
                 }
                 Spacer(Modifier.height(12.dp))
                 if (t == null) {
-                    WideButton("Set Up Online Backup") { chooser.launch("LiquidTube Backup.json") }
+                    WideButton(tr("Set Up Online Backup", "Çevrimiçi Yedeklemeyi Kur")) { chooser.launch("LiquidTube Backup.json") }
                 } else {
-                    WideButton("Back Up Now") {
+                    WideButton(tr("Back Up Now", "Şimdi Yedekle")) {
                         connection.library.saveStats()
                         scope.launch {
                             com.enes.liquidtube.data.AutoBackup.runNow(context)
-                                .onSuccess { toast("Backed up to ${t.where.ifBlank { "your backup file" }}") }
-                                .onFailure { toast("Couldn’t back up. Check that the file still exists.") }
+                                .onSuccess { toast(tr("Backed up to ${t.where.ifBlank { "your backup file" }}", "${t.where.ifBlank { "Yedek dosyanıza" }} yedeklendi")) }
+                                .onFailure { toast(tr("Couldn’t back up. Check that the file still exists.", "Yedeklenemedi. Dosyanın hâlâ var olduğunu kontrol edin.")) }
                         }
                     }
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Box(Modifier.weight(1f)) { WideButton("Change…", destructive = true) { chooser.launch("LiquidTube Backup.json") } }
-                        Box(Modifier.weight(1f)) { WideButton("Turn Off", destructive = true) { com.enes.liquidtube.data.AutoBackup.clear(context) } }
+                        Box(Modifier.weight(1f)) { WideButton(tr("Change…", "Değiştir…"), destructive = true) { chooser.launch("LiquidTube Backup.json") } }
+                        Box(Modifier.weight(1f)) { WideButton(tr("Turn Off", "Kapat"), destructive = true) { com.enes.liquidtube.data.AutoBackup.clear(context) } }
                     }
                 }
             }
             HorizontalDivider(Modifier.padding(start = 16.dp), thickness = 0.5.dp, color = c.separator)
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Text("Backup File", style = AppTheme.type.body, color = c.label)
+                Text(tr("Backup File", "Yedek Dosyası"), style = AppTheme.type.body, color = c.label)
                 Text(
-                    "Save a one-off copy anywhere (Drive, Files, email it to yourself), or restore from one. Includes favorites, play counts, Replay stats, Recently Played and settings.",
+                    tr("Save a one-off copy anywhere (Drive, Files, email it to yourself), or restore from one. Includes favorites, play counts, Replay stats, Recently Played and settings.", "Tek seferlik bir kopyayı herhangi bir yere kaydedin (Drive, Dosyalar, kendinize e-posta) veya ondan geri yükleyin. Favoriler, çalma sayıları, Replay istatistikleri, Son Çalınanlar ve ayarlar dahildir."),
                     style = AppTheme.type.footnote, color = c.secondaryLabel,
                 )
                 Spacer(Modifier.height(12.dp))
-                WideButton("Upload a Copy to Google Drive", destructive = true) {
+                WideButton(tr("Upload a Copy to Google Drive", "Google Drive'a Kopya Yükle"), destructive = true) {
                     connection.library.saveStats()
                     scope.launch {
                         com.enes.liquidtube.data.AutoBackup.sendToDrive(context)
-                            .onFailure { toast("Couldn\u2019t prepare the backup") }
+                            .onFailure { toast(tr("Couldn\u2019t prepare the backup", "Yedek hazırlanamadı")) }
                     }
                 }
                 Spacer(Modifier.height(10.dp))
-                WideButton("Save a Copy\u2026", destructive = true) {
+                WideButton(tr("Save a Copy\u2026", "Kopya Kaydet…"), destructive = true) {
                     connection.library.saveStats()
                     val day = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
                     exporter.launch("LiquidTube Backup $day.json")
                 }
                 Spacer(Modifier.height(10.dp))
-                WideButton("Restore from Backup\u2026", destructive = true) {
+                WideButton(tr("Restore from Backup\u2026", "Yedekten Geri Yükle…"), destructive = true) {
                     importer.launch(arrayOf("application/json", "application/octet-stream", "text/plain"))
                 }
             }
@@ -716,7 +738,7 @@ fun LoginScreen(onDone: () -> Unit) {
             Modifier.fillMaxWidth().statusBarsPadding(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BackRow("Cancel", onDone)
+            BackRow(tr("Cancel", "İptal"), onDone)
             Spacer(Modifier.weight(1f))
             if (loading) {
                 CircularProgressIndicator(
@@ -749,7 +771,7 @@ fun LoginScreen(onDone: () -> Unit) {
                             finished = true
                             cookies.flush()
                             if (connection.auth.login(cookie)) {
-                                Toast.makeText(context, "Signed in", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, tr("Signed in", "Giriş yapıldı"), Toast.LENGTH_SHORT).show()
                             }
                             onDone()
                         }
@@ -764,3 +786,10 @@ fun LoginScreen(onDone: () -> Unit) {
 private const val LOGIN_URL =
     "https://accounts.google.com/ServiceLogin?ltmpl=music&service=youtube&passive=true&continue=" +
         "https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26next%3Dhttps%253A%252F%252Fmusic.youtube.com%252F"
+
+/** Names of the lyrics translation languages, in Turkish. */
+private val TRANSLATE_LANG_TR = mapOf(
+    "" to "Telefon Dili", "en" to "İngilizce", "tr" to "Türkçe", "es" to "İspanyolca",
+    "de" to "Almanca", "fr" to "Fransızca", "it" to "İtalyanca", "pt" to "Portekizce",
+    "ru" to "Rusça", "ar" to "Arapça", "ja" to "Japonca", "ko" to "Korece",
+)

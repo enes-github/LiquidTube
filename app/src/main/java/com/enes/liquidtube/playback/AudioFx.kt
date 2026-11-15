@@ -1,5 +1,6 @@
 package com.enes.liquidtube.playback
 
+import com.enes.liquidtube.ui.theme.tr
 import android.media.audiofx.DynamicsProcessing
 import android.util.Log
 
@@ -57,9 +58,14 @@ class AudioFx {
         session = 0
     }
 
-    data class Preset(val id: String, val label: String, val gains: FloatArray)
+    data class Preset(val id: String, private val en: String, val gains: FloatArray) {
+        /** Shown in menus, in the app's language. */
+        val label: String get() = tr(en, AudioFx.PRESET_TR[id] ?: en)
+    }
+
 
     companion object {
+        internal val PRESET_TR = mapOf("off" to "Kapalı", "bass" to "Bas Güçlendirici", "vocal" to "Vokal", "treble" to "Tiz Güçlendirici", "acoustic" to "Akustik", "electronic" to "Elektronik", "late" to "Gece", "loud" to "Yüksek Ses")
         private const val TAG = "LiquidTube"
         /** Upper cutoffs of the 5 bands (Hz): lows, low-mids, mids, presence, air. */
         val BANDS = floatArrayOf(150f, 600f, 2500f, 7000f, 20000f)
