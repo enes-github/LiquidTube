@@ -44,10 +44,16 @@ class MainActivity : ComponentActivity() {
             com.enes.liquidtube.ui.navigation.PendingNav.collection.value = it
             intent.removeExtra(EXTRA_OPEN_COLLECTION)
         }
+        if (intent?.getBooleanExtra(EXTRA_SHOW_UPDATE, false) == true) {
+            // Opened from the "Update available" notification: let the sheet show again.
+            com.enes.liquidtube.data.AppUpdater.requestPrompt()
+            intent.removeExtra(EXTRA_SHOW_UPDATE)
+        }
     }
 
     companion object {
         const val EXTRA_OPEN_COLLECTION = "open_collection"
+        const val EXTRA_SHOW_UPDATE = "show_update"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,6 +99,10 @@ class MainActivity : ComponentActivity() {
                     ) {
                         launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
+                }
+                // Look for a newer LiquidTube on each launch; the update sheet appears if there is one.
+                LaunchedEffect(Unit) {
+                    com.enes.liquidtube.data.AppUpdater.check(this@MainActivity, notify = false)
                 }
 
                 // The launch screen covers the app until it has connected and loaded Home.

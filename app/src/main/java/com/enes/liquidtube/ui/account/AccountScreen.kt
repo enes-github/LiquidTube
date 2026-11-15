@@ -378,6 +378,65 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
+        SettingsGroup(tr("UPDATES", "GÜNCELLEMELER")) {
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val updScope = androidx.compose.runtime.rememberCoroutineScope()
+            val autoUpdate by connection.settings.autoUpdateCheck.collectAsStateWithLifecycle()
+            val available by com.enes.liquidtube.data.AppUpdater.available.collectAsStateWithLifecycle()
+            var checking by remember { mutableStateOf(false) }
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Text(
+                    tr("You’re on LiquidTube ", "LiquidTube ") +
+                        com.enes.liquidtube.data.AppUpdater.currentVersionName(ctx) +
+                        tr("", " sürümündesiniz"),
+                    style = AppTheme.type.body, color = c.label,
+                )
+                Text(
+                    available?.let { tr("Version ${it.versionName} is available.", "${it.versionName} sürümü hazır.") }
+                        ?: tr("Updates install straight from GitHub, no store needed.", "Güncellemeler mağaza olmadan doğrudan GitHub’dan yüklenir."),
+                    style = AppTheme.type.footnote,
+                    color = if (available != null) c.accent else c.secondaryLabel,
+                )
+                Spacer(Modifier.height(12.dp))
+                WideButton(
+                    if (available != null) tr("Install Update", "Güncellemeyi Yükle")
+                    else if (checking) tr("Checking…", "Kontrol ediliyor…")
+                    else tr("Check for Updates", "Güncellemeleri Denetle"),
+                ) {
+                    if (available != null) {
+                        com.enes.liquidtube.data.AppUpdater.requestPrompt()
+                    } else if (!checking) {
+                        checking = true
+                        updScope.launch {
+                            val found = com.enes.liquidtube.data.AppUpdater.check(ctx, notify = false)
+                            checking = false
+                            if (found == null) android.widget.Toast.makeText(
+                                ctx, tr("You’re up to date", "En son sürümdesiniz"), android.widget.Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
+                }
+            }
+            HorizontalDivider(Modifier.padding(start = 16.dp), thickness = 0.5.dp, color = c.separator)
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Check Automatically", "Otomatik Denetle"), style = AppTheme.type.body, color = c.label)
+                    Text(
+                        tr("Look for a new version in the background and notify you quietly.", "Arka planda yeni sürüm arar ve sessizce bildirir."),
+                        style = AppTheme.type.footnote, color = c.secondaryLabel,
+                    )
+                }
+                Switch(
+                    checked = autoUpdate,
+                    onCheckedChange = connection.settings::setAutoUpdateCheck,
+                    colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFF34C759), checkedThumbColor = Color.White),
+                )
+            }
+        }
+
         SettingsGroup(tr("STATIONS", "İSTASYONLAR")) {
             val style by connection.settings.stationStyle.collectAsStateWithLifecycle()
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {

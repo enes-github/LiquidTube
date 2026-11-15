@@ -18,6 +18,7 @@ class App : Application(), SingletonImageLoader.Factory {
         com.enes.liquidtube.data.LyricsTranslator.init(this)
         com.enes.liquidtube.data.NewReleases.init(this)
         com.enes.liquidtube.data.AutoBackup.init(this)
+        com.enes.liquidtube.data.AppUpdater.init(this)
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

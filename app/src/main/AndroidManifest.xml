@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Install an update's APK from inside the app (sideloaded; no Play Store). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".App"
@@ -74,6 +76,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
+
+        <!-- Result of an in-app update install (asks to show the system confirm screen). -->
+        <receiver
+            android:name=".data.UpdateInstallReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".playback.BluetoothResumeReceiver"

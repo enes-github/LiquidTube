@@ -191,6 +191,15 @@ class SettingsStore @Inject constructor(
         prefs.edit().putBoolean(KEY_RELEASES, enabled).apply()
     }
 
+    private val _autoUpdate = MutableStateFlow(prefs.getBoolean(AppUpdater.KEY_AUTO_CHECK, true))
+    /** Check GitHub for a newer LiquidTube and offer to install it. */
+    val autoUpdateCheck: StateFlow<Boolean> = _autoUpdate.asStateFlow()
+
+    fun setAutoUpdateCheck(enabled: Boolean) {
+        _autoUpdate.value = enabled
+        prefs.edit().putBoolean(AppUpdater.KEY_AUTO_CHECK, enabled).apply()
+    }
+
     private val _station = MutableStateFlow(prefs.getString(KEY_STATION, "balanced") ?: "balanced")
     /** Station style: "familiar", "balanced" or "discovery". */
     val stationStyle: StateFlow<String> = _station.asStateFlow()

@@ -293,6 +293,8 @@ fun AppScaffold(connection: PlayerConnection) {
     ) {
         SharedTransitionLayout(Modifier.fillMaxSize()) {
           Box(Modifier.fillMaxSize().background(c.background)) {
+            // "Update available" sheet; shows itself when a newer LiquidTube is out.
+            com.enes.liquidtube.ui.components.UpdateSheet()
             // The whole screen is recorded for menus/sheets to blur only while one is open:
             // drawing through a recorded layer degrades Now Playing's progressive blur.
             Box(
