@@ -85,7 +85,7 @@ object LyricsTranslator {
      */
     private fun requestLines(lines: List<String>, lang: String): Pair<List<String>, String?> {
         val out = ArrayList<String>(lines.size)
-        var detected: String? = null
+        val langs = ArrayList<String?>(lines.size)
         for (batch in lines.chunked(60)) {
             val conn = URL("https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=$lang")
                 .openConnection() as HttpURLConnection
@@ -94,6 +94,7 @@ object LyricsTranslator {
             conn.connectTimeout = 8_000
             conn.readTimeout = 12_000
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
+            conn.setRequestProperty("User-Agent", BROWSER_UA)
             val form = batch.joinToString("&") { "q=" + URLEncoder.encode(it, "UTF-8") }
             conn.outputStream.use { it.write(form.toByteArray()) }
             val body = conn.inputStream.use { it.readBytes().decodeToString() }
@@ -103,15 +104,19 @@ object LyricsTranslator {
                 when (item) {
                     is JsonArray -> {
                         out += (item.getOrNull(0) as? JsonPrimitive)?.contentOrNull.orEmpty()
-                        if (detected == null) detected = (item.getOrNull(1) as? JsonPrimitive)?.contentOrNull
+                        langs += (item.getOrNull(1) as? JsonPrimitive)?.contentOrNull
                     }
-                    is JsonPrimitive -> out += item.contentOrNull.orEmpty()
-                    else -> out += ""
+                    is JsonPrimitive -> { out += item.contentOrNull.orEmpty(); langs += null }
+                    else -> { out += ""; langs += null }
                 }
             }
         }
-        // Mostly in the target language already (e.g. an English song, English phone).
-        return out to detected
+        // Each line has its own detected language: the song's language is the most common
+        // one (a single English tag must not make a Spanish song count as English), and
+        // lines already in the target language get no translation under them.
+        val main = langs.filterNotNull().groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
+        val shown = out.mapIndexed { i, t -> if (langs.getOrNull(i) == lang) "" else t }
+        return shown to main
     }
 
     /** Fallback: sends all lines at once (one per line) and splits the answer back into lines. */
@@ -123,6 +128,7 @@ object LyricsTranslator {
         conn.connectTimeout = 8_000
         conn.readTimeout = 12_000
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
+        conn.setRequestProperty("User-Agent", BROWSER_UA)
         conn.outputStream.use { it.write(("q=" + URLEncoder.encode(lines.joinToString("\n"), "UTF-8")).toByteArray()) }
         val body = conn.inputStream.use { it.readBytes().decodeToString() }
         conn.disconnect()
@@ -147,4 +153,8 @@ object LyricsTranslator {
         if (current.isNotBlank()) out += current.toString().trim()
         return out to detected
     }
+
+    /** Sent as a regular phone browser: Android's default agent ("Dalvik/…") gets a bot check page. */
+    private const val BROWSER_UA =
+        "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
 }
