@@ -26,8 +26,8 @@ android {
         applicationId = "com.enes.liquidtube"
         minSdk = 31          // Android 12 — required for RenderEffect blur.
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.3.1"
     }
 
     signingConfigs {
