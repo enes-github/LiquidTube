@@ -288,6 +288,11 @@ class PlayerConnection @Inject constructor(
         val audio = context.getSystemService(android.media.AudioManager::class.java) ?: return
         val since = System.currentTimeMillis()
         audio.registerAudioDeviceCallback(object : android.media.AudioDeviceCallback() {
+            override fun onAudioDevicesRemoved(removed: Array<out android.media.AudioDeviceInfo>) {
+                // Gone again before the resume fired: don't resume.
+                if (removed.any { it.type in LISTENING_DEVICES } && !listeningDeviceConnected()) resumeJob?.cancel()
+            }
+
             override fun onAudioDevicesAdded(added: Array<out android.media.AudioDeviceInfo>) {
                 // The callback first lists what's already connected: that's not a new arrival.
                 if (System.currentTimeMillis() - since < 3_000) return
@@ -305,12 +310,32 @@ class PlayerConnection @Inject constructor(
         if (!settings.autoResume.value) return
         val pausedAt = sessionPrefs.getLong(KEY_PAUSED_AT, 0L)
         if (System.currentTimeMillis() - pausedAt > 4 * 3_600_000L) return
-        withController { c ->
-            if (c.isPlaying || c.mediaItemCount == 0) return@withController
-            Log.i(TAG, "Resuming: an audio device connected")
-            c.prepare()
-            c.play()
+        // A loose AUX cable or a flaky adapter connects and disconnects many times a
+        // second; resuming on each connect fought the "unplugged" pause in a loop. So:
+        // wait until the device has stayed connected for a few seconds, and resume at
+        // most once per minute.
+        resumeJob?.cancel()
+        resumeJob = scope.launch {
+            delay(3_000)
+            if (System.currentTimeMillis() - lastAutoResume < 60_000L) return@launch
+            if (!listeningDeviceConnected()) return@launch
+            withController { c ->
+                if (c.isPlaying || c.mediaItemCount == 0) return@withController
+                lastAutoResume = System.currentTimeMillis()
+                Log.i(TAG, "Resuming: an audio device connected")
+                c.prepare()
+                c.play()
+            }
         }
+    }
+
+    private var resumeJob: Job? = null
+    private var lastAutoResume = 0L
+
+    /** Headphones, AUX, Bluetooth audio or a car is connected right now. */
+    private fun listeningDeviceConnected(): Boolean {
+        val audio = context.getSystemService(android.media.AudioManager::class.java) ?: return false
+        return audio.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).any { it.type in LISTENING_DEVICES }
     }
 
     // ------------------------------------------------- resume where you left off
@@ -1076,6 +1101,7 @@ class PlayerConnection @Inject constructor(
         val LISTENING_DEVICES = setOf(
             android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
             android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET,
+            android.media.AudioDeviceInfo.TYPE_AUX_LINE,
             android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
             android.media.AudioDeviceInfo.TYPE_USB_HEADSET,
             android.media.AudioDeviceInfo.TYPE_BLE_HEADSET,
