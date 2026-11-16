@@ -78,10 +78,26 @@ jobs:
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk "dist/LiquidTube-${{ steps.ver.outputs.version }}.apk"
 
+      # Hand-written notes in docs/release-notes/<tag>.md if there are any (they also
+      # show in the in-app update sheet), otherwise GitHub's generated list of changes.
+      - name: Pick the release notes
+        id: notes
+        run: |
+          NOTES="docs/release-notes/${GITHUB_REF_NAME}.md"
+          if [ -f "$NOTES" ]; then
+            echo "path=$NOTES" >> "$GITHUB_OUTPUT"
+            echo "generate=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=" >> "$GITHUB_OUTPUT"
+            echo "generate=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish the GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: LiquidTube ${{ steps.ver.outputs.version }}
           tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.generate }}
+          make_latest: true
           files: dist/LiquidTube-${{ steps.ver.outputs.version }}.apk
