@@ -1,5 +1,6 @@
 package com.enes.liquidtube.ui.account
 
+import androidx.compose.foundation.layout.imePadding
 import com.enes.liquidtube.ui.theme.tr
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -792,7 +793,22 @@ fun LoginScreen(onDone: () -> Unit) {
     var finished by remember { mutableStateOf(false) }
     val c = AppTheme.colors
 
-    Column(Modifier.fillMaxSize().background(c.background)) {
+    // Its own full-screen window above the app: the tab bar can't cover it, and the glass
+    // effect (which re-captures the page under it every frame) can't make the web page flicker.
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDone,
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+            dismissOnClickOutside = false,
+        ),
+    ) {
+    // The keyboard resizes the page instead of covering the fields.
+    val dialogWindow = (androidx.compose.ui.platform.LocalView.current.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+    androidx.compose.runtime.SideEffect {
+        dialogWindow?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+    }
+    Column(Modifier.fillMaxSize().background(c.background).imePadding()) {
         Row(
             Modifier.fillMaxWidth().statusBarsPadding(),
             verticalAlignment = Alignment.CenterVertically,
@@ -839,6 +855,7 @@ fun LoginScreen(onDone: () -> Unit) {
                 }
             },
         )
+    }
     }
 }
 
