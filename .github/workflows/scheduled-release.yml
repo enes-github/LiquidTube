@@ -1,0 +1,47 @@
+name: Scheduled release
+
+# Release at a set time instead of right away. Write the tag and the time (UTC) in
+# .github/release-schedule, e.g.
+#     v0.3.4 2026-11-16T17:00:00Z
+# with versionName and docs/release-notes/<tag>.md already on main. Every hour this
+# checks the file; once the time has passed (and that tag doesn't exist yet) it tags
+# main and runs the normal release. GitHub can start scheduled runs a few minutes late.
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      due: ${{ steps.when.outputs.due }}
+      tag: ${{ steps.when.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Is a release due?
+        id: when
+        run: |
+          echo "due=false" >> "$GITHUB_OUTPUT"
+          [ -f .github/release-schedule ] || { echo "Nothing scheduled."; exit 0; }
+          read -r TAG AT < <(grep -v '^#' .github/release-schedule | grep -m1 .)
+          echo "Scheduled: $TAG at $AT"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then echo "$TAG is already out."; exit 0; fi
+          if [ "$(date -u +%s)" -lt "$(date -u -d "$AT" +%s)" ]; then echo "Not yet."; exit 0; fi
+          git tag "$TAG" && git push origin "$TAG"
+          echo "due=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: check
+    if: needs.check.outputs.due == 'true'
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.check.outputs.tag }}
+    secrets: inherit
