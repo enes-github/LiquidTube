@@ -19,6 +19,7 @@ val keystoreProps = Properties().apply {
 }
 
 android {
+
     namespace = "com.enes.liquidtube"
     compileSdk = 35
 
@@ -28,6 +29,7 @@ android {
         targetSdk = 35
         versionCode = 7
         versionName = "0.3.4"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -42,6 +44,10 @@ android {
     }
 
     buildTypes {
+        // Debug builds install next to the real app instead of over it.
+        debug {
+            applicationIdSuffix = ".debug"
+        }
         release {
             // Optimized (R8); Compose is far smoother in release than debug.
             isMinifyEnabled = true
@@ -90,6 +96,10 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.cast)
+    androidTestImplementation(libs.junit)
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

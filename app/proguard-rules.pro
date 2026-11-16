@@ -28,3 +28,6 @@
 # Open source, so scrambling names protects nothing; real names let the startup profile
 # (src/main/baseline-prof.txt) cover the whole app, and crash reports stay readable.
 -dontobfuscate
+
+# Cast (beta): the options class is only named in the manifest.
+-keep class com.enes.liquidtube.playback.cast.CastOptionsProvider { *; }

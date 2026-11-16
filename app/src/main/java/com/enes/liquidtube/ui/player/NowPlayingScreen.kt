@@ -144,6 +144,7 @@ import android.media.MediaRouter2
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.material.icons.rounded.Airplay
+import androidx.compose.material.icons.rounded.CastConnected
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Equalizer
@@ -453,7 +454,7 @@ fun NowPlayingScreen(
                                             Icons.Rounded.FormatQuote, tr("Lyrics", "Sözler"), mode == PanelMode.Lyrics, topColor,
                                             dimmed = !lyricsLoading && lyrics == null,
                                         ) { mode = if (mode == PanelMode.Lyrics) PanelMode.Artwork else PanelMode.Lyrics }
-                                        ToggleIcon(Icons.Rounded.Airplay, tr("Output", "Çıkış"), false, topColor) { openOutputSwitcher(context) }
+                                        OutputButton(topColor)
                                         ToggleIcon(
                                             Icons.AutoMirrored.Rounded.QueueMusic, tr("Playing Next", "Sıradaki"), mode == PanelMode.Queue, topColor,
                                         ) { mode = if (mode == PanelMode.Queue) PanelMode.Artwork else PanelMode.Queue }
@@ -628,7 +629,7 @@ fun NowPlayingScreen(
                         Icons.Rounded.FormatQuote, tr("Lyrics", "Sözler"), mode == PanelMode.Lyrics, topColor,
                         dimmed = !lyricsLoading && lyrics == null,
                     ) { mode = if (mode == PanelMode.Lyrics) PanelMode.Artwork else PanelMode.Lyrics }
-                    ToggleIcon(Icons.Rounded.Airplay, tr("Output", "Çıkış"), false, topColor) { openOutputSwitcher(context) }
+                    OutputButton(topColor)
                     ToggleIcon(
                         Icons.AutoMirrored.Rounded.QueueMusic, tr("Playing Next", "Sıradaki"), mode == PanelMode.Queue, topColor,
                     ) { mode = if (mode == PanelMode.Queue) PanelMode.Artwork else PanelMode.Queue }
@@ -836,6 +837,26 @@ MenuAction(
         },
         onClick = null,
     )
+}
+
+/**
+ * Output: Android's own picker (speaker / Bluetooth), or, when Cast speakers or TVs are on
+ * the Wi-Fi, the "Play On" sheet that lists them too. Lit up while casting.
+ */
+@Composable
+private fun OutputButton(accent: Color) {
+    val context = LocalContext.current
+    val devices by com.enes.liquidtube.playback.cast.Cast.devices.collectAsStateWithLifecycle()
+    val castingTo by com.enes.liquidtube.playback.cast.Cast.castingTo.collectAsStateWithLifecycle()
+    var sheet by remember { mutableStateOf(false) }
+    ToggleIcon(
+        if (castingTo != null) Icons.Rounded.CastConnected else Icons.Rounded.Airplay,
+        castingTo?.let { tr("Playing on $it", "$it üzerinde çalıyor") } ?: tr("Output", "Çıkış"),
+        castingTo != null, accent,
+    ) {
+        if (devices.isEmpty() && castingTo == null) openOutputSwitcher(context) else sheet = true
+    }
+    if (sheet) PlayOnSheet(onDismiss = { sheet = false }, openPhoneOutputs = { openOutputSwitcher(context) })
 }
 
 /** Android's system output picker (speaker / Bluetooth / cast), our AirPlay. */
@@ -1208,13 +1229,15 @@ private fun VolumeRow() {
     val context = LocalContext.current
     val audio = remember { context.getSystemService(AudioManager::class.java) }
     val max = remember { audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1) }
+    val castingTo by com.enes.liquidtube.playback.cast.Cast.castingTo.collectAsStateWithLifecycle()
     var volume by remember { mutableFloatStateOf(audio.getStreamVolume(AudioManager.STREAM_MUSIC) / max.toFloat()) }
 
-    // Keep in sync with hardware volume keys.
-    LaunchedEffect(Unit) {
+    // Keep in sync with hardware volume keys (or the speaker's volume while casting).
+    LaunchedEffect(castingTo) {
         while (true) {
+            volume = if (castingTo != null) com.enes.liquidtube.playback.cast.Cast.volume() ?: volume
+                else audio.getStreamVolume(AudioManager.STREAM_MUSIC) / max.toFloat()
             delay(500)
-            volume = audio.getStreamVolume(AudioManager.STREAM_MUSIC) / max.toFloat()
         }
     }
 
@@ -1225,7 +1248,8 @@ private fun VolumeRow() {
             value = volume,
             onValueChange = {
                 volume = it
-                audio.setStreamVolume(AudioManager.STREAM_MUSIC, (it * max).roundToInt(), 0)
+                if (castingTo != null) com.enes.liquidtube.playback.cast.Cast.setVolume(it)
+                else audio.setStreamVolume(AudioManager.STREAM_MUSIC, (it * max).roundToInt(), 0)
             },
             onValueChangeFinished = {},
             modifier = Modifier.weight(1f),

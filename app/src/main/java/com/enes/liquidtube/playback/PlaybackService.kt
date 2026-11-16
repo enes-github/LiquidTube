@@ -112,6 +112,8 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
         )
         // The session sees the player through the lock-screen lyrics layer.
         val sessionPlayer = LyricsMetadataPlayer(player)
+        localPlayer = player
+        localSessionPlayer = sessionPlayer
         LockScreenLyrics.player = sessionPlayer
         mediaSession = MediaLibrarySession.Builder(this, sessionPlayer, SessionCallback())
             .setSessionActivity(openApp)
@@ -129,6 +131,103 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
         })
         connection.favoriteChanged = { handler.post { refreshFavoriteButton() } }
         refreshFavoriteButton()
+        runCatching { setUpCast(player, dataSourceFactory) }.onFailure { Log.w(TAG, "Cast setup failed", it) }
+    }
+
+    // ------------------------------------------------------------- cast (beta)
+
+    private lateinit var localPlayer: ExoPlayer
+    private lateinit var localSessionPlayer: LyricsMetadataPlayer
+    private var castPlayer: androidx.media3.cast.CastPlayer? = null
+    private var castSessionPlayer: LyricsMetadataPlayer? = null
+    private var castServer: com.enes.liquidtube.playback.cast.CastServer? = null
+
+    /** What the speaker was playing, kept up to date: the queue comes back to the phone from it. */
+    private var castQueue: List<MediaItem> = emptyList()
+    private var castIndex = 0
+    private var castPosition = 0L
+    private var castPlaying = false
+
+    private fun setUpCast(local: ExoPlayer, dataSources: androidx.media3.datasource.DataSource.Factory) {
+        val castContext = com.enes.liquidtube.playback.cast.Cast.castContext(this) ?: return
+        val server = com.enes.liquidtube.playback.cast.CastServer(dataSources)
+        castServer = server
+        val cp = androidx.media3.cast.CastPlayer(castContext, com.enes.liquidtube.playback.cast.CastItemConverter(server))
+        castPlayer = cp
+        cp.addListener(object : Player.Listener {
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) = refreshFavoriteButton()
+        })
+        cp.setSessionAvailabilityListener(object : androidx.media3.cast.SessionAvailabilityListener {
+            override fun onCastSessionAvailable() = toCast(local, cp, server)
+            override fun onCastSessionUnavailable() = toPhone(local, cp, server)
+        })
+        com.enes.liquidtube.playback.cast.Cast.startDiscovery(this)
+        if (cp.isCastSessionAvailable) toCast(local, cp, server)
+    }
+
+    private fun castDeviceName(): String? =
+        com.enes.liquidtube.playback.cast.Cast.castContext(this)?.sessionManager?.currentCastSession?.castDevice?.friendlyName
+
+    private fun toCast(local: ExoPlayer, cp: androidx.media3.cast.CastPlayer, server: com.enes.liquidtube.playback.cast.CastServer) {
+        server.start()
+        if (com.enes.liquidtube.playback.cast.CastServer.lanAddress() == null) {
+            android.widget.Toast.makeText(this, com.enes.liquidtube.ui.theme.tr("Connect to Wi-Fi to cast", "Yayınlamak için Wi-Fi'a bağlanın"), android.widget.Toast.LENGTH_LONG).show()
+        }
+        releaseTail()
+        val count = local.mediaItemCount
+        if (count > 0) {
+            // A window around the current song: a speaker takes a limited queue in one go.
+            val index = local.currentMediaItemIndex.coerceIn(0, count - 1)
+            val from = (index - 5).coerceAtLeast(0)
+            val to = (index + 80).coerceAtMost(count)
+            val items = (from until to).map { local.getMediaItemAt(it) }
+            cp.repeatMode = local.repeatMode
+            cp.setMediaItems(items, index - from, local.currentPosition.coerceAtLeast(0))
+            cp.playWhenReady = local.playWhenReady
+            cp.prepare()
+        }
+        local.pause()
+        val wrapper = castSessionPlayer ?: LyricsMetadataPlayer(cp).also { castSessionPlayer = it }
+        LockScreenLyrics.player = wrapper
+        mediaSession?.player = wrapper
+        com.enes.liquidtube.playback.cast.Cast.sessionStarted(castDeviceName())
+        Log.i(TAG, "Cast: playing on ${castDeviceName()}")
+        handler.removeCallbacks(castTick)
+        handler.post(castTick)
+    }
+
+    private val castTick = object : Runnable {
+        override fun run() {
+            val cp = castPlayer ?: return
+            if (!cp.isCastSessionAvailable) return
+            if (cp.mediaItemCount > 0) {
+                castQueue = (0 until cp.mediaItemCount).map { cp.getMediaItemAt(it) }
+                castIndex = cp.currentMediaItemIndex
+                castPosition = cp.currentPosition
+                castPlaying = cp.playWhenReady
+            }
+            handler.postDelayed(this, 1000)
+        }
+    }
+
+    private fun toPhone(local: ExoPlayer, cp: androidx.media3.cast.CastPlayer, server: com.enes.liquidtube.playback.cast.CastServer) {
+        handler.removeCallbacks(castTick)
+        val items = if (cp.mediaItemCount > 0) (0 until cp.mediaItemCount).map { cp.getMediaItemAt(it) } else castQueue
+        val index = if (cp.mediaItemCount > 0) cp.currentMediaItemIndex else castIndex
+        val position = if (cp.mediaItemCount > 0) cp.currentPosition else castPosition
+        if (items.isNotEmpty()) {
+            local.setMediaItems(items, index.coerceIn(0, items.size - 1), position.coerceAtLeast(0))
+            local.repeatMode = cp.repeatMode
+            local.prepare()
+        }
+        // Like other music apps: when the speaker goes away, the phone waits paused.
+        local.playWhenReady = false
+        LockScreenLyrics.player = localSessionPlayer
+        mediaSession?.player = localSessionPlayer
+        server.stop()
+        castQueue = emptyList()
+        com.enes.liquidtube.playback.cast.Cast.sessionEnded()
+        Log.i(TAG, "Cast: back on the phone (${items.size} songs)")
     }
 
     /** Re-resolves once on failure (e.g. expired URL → 403), then skips the track. */
@@ -364,10 +463,11 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
         fx.release()
         LockScreenLyrics.player = null
         serviceScope.cancel()
-        mediaSession?.run {
-            player.release()
-            release()
-        }
+        castPlayer?.setSessionAvailabilityListener(null)
+        castPlayer?.release()
+        castServer?.stop()
+        if (::localPlayer.isInitialized) localPlayer.release()
+        mediaSession?.release()
         mediaSession = null
         super.onDestroy()
     }

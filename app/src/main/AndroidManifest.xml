@@ -25,6 +25,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LiquidTube"
         tools:targetApi="31">
+        <!-- Cast (beta): Google's standard media player on the speaker/TV. -->
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="com.enes.liquidtube.playback.cast.CastOptionsProvider" />
+
 
         <activity
             android:name=".MainActivity"
