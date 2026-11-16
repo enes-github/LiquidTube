@@ -480,6 +480,20 @@ class PlayerConnection @Inject constructor(
         }
     }
 
+    /** App-icon shortcut: shuffle everything you've favorited. */
+    fun shuffleFavorites() {
+        val favs = library.favorites.value
+        if (favs.isEmpty()) { toast(tr("No favorites yet", "Henüz favori yok")); return }
+        shufflePlay(favs)
+    }
+
+    /** App-icon shortcut: play the Offline Mix (falls back to favorites if it's empty). */
+    fun playOfflineMix() {
+        val mix = smart.mix.value.ifEmpty { library.favorites.value }
+        if (mix.isEmpty()) { toast(tr("Nothing to play yet", "Henüz çalacak bir şey yok")); return }
+        shufflePlay(mix)
+    }
+
     /** Single tap on a song: play it and keep going with its radio. */
     fun playSong(song: SongItem) = play(listOf(song), radio = true)
 

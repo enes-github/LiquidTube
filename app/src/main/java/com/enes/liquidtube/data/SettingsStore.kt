@@ -209,7 +209,17 @@ class SettingsStore @Inject constructor(
         prefs.edit().putString(KEY_STATION, style).apply()
     }
 
+    private val _onboardingSeen = MutableStateFlow(prefs.getBoolean(KEY_ONBOARDING, false))
+    /** Whether the first-launch walkthrough has been shown (once per install). */
+    val onboardingSeen: StateFlow<Boolean> = _onboardingSeen.asStateFlow()
+
+    fun setOnboardingSeen() {
+        _onboardingSeen.value = true
+        prefs.edit().putBoolean(KEY_ONBOARDING, true).apply()
+    }
+
     companion object {
+        private const val KEY_ONBOARDING = "onboarding_seen"
         /** Languages the interface is translated into ("" = follow the phone). */
         val SUPPORTED_LANGUAGES = listOf(
             LanguageOption("", "System Default", "Sistem Varsayılanı"),

@@ -87,6 +87,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -269,6 +270,16 @@ fun AppScaffold(connection: PlayerConnection) {
             }
         }
     }
+    // App-icon shortcut: jump to the Search tab.
+    LaunchedEffect(Unit) {
+        PendingNav.openSearch.collect { go ->
+            if (go) {
+                nowPlayingOpen = false
+                pagerState.animateScrollToPage(Tab.Search.ordinal, animationSpec = TabSpring)
+                PendingNav.openSearch.value = false
+            }
+        }
+    }
     val overlay = remember { OverlayController() }
     val menus = remember(navActions, overlay) { MenuFactory(connection, navActions, overlay) }
 
@@ -297,6 +308,13 @@ fun AppScaffold(connection: PlayerConnection) {
             com.enes.liquidtube.ui.components.UpdateSheet()
             // "Send a report?" after a crash.
             com.enes.liquidtube.ui.components.CrashReportSheet()
+            // First-launch walkthrough, over everything else, once per install.
+            val onboardingSeen by connection.settings.onboardingSeen.collectAsStateWithLifecycle()
+            if (!onboardingSeen) {
+                Box(Modifier.fillMaxSize().zIndex(50f)) {
+                    com.enes.liquidtube.ui.onboarding.OnboardingFlow(onDone = { connection.settings.setOnboardingSeen() })
+                }
+            }
             // The whole screen is recorded for menus/sheets to blur only while one is open:
             // drawing through a recorded layer degrades Now Playing's progressive blur.
             Box(
@@ -1001,4 +1019,6 @@ private fun GlassTabRail(
 /** Navigation requested from outside the UI (a notification tap). */
 object PendingNav {
     val collection = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    /** App-icon shortcut asked to open Search. */
+    val openSearch = kotlinx.coroutines.flow.MutableStateFlow(false)
 }

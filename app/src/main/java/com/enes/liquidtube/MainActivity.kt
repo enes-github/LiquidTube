@@ -40,6 +40,15 @@ class MainActivity : ComponentActivity() {
             intent.action = null
             return
         }
+        intent?.getStringExtra(com.enes.liquidtube.data.Shortcuts.EXTRA_ACTION)?.let { action ->
+            when (action) {
+                com.enes.liquidtube.data.Shortcuts.SEARCH ->
+                    com.enes.liquidtube.ui.navigation.PendingNav.openSearch.value = true
+                com.enes.liquidtube.data.Shortcuts.SHUFFLE_FAVORITES -> playerConnection.shuffleFavorites()
+                com.enes.liquidtube.data.Shortcuts.OFFLINE_MIX -> playerConnection.playOfflineMix()
+            }
+            intent.removeExtra(com.enes.liquidtube.data.Shortcuts.EXTRA_ACTION)
+        }
         intent?.getStringExtra(EXTRA_OPEN_COLLECTION)?.let {
             com.enes.liquidtube.ui.navigation.PendingNav.collection.value = it
             intent.removeExtra(EXTRA_OPEN_COLLECTION)
