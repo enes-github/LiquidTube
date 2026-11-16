@@ -37,10 +37,23 @@ class AppDownloadService : DownloadService(
 
     override fun getScheduler(): Scheduler? = null
 
-    override fun getForegroundNotification(downloads: MutableList<Download>, notMetRequirements: Int): Notification =
-        DownloadNotificationHelper(this, CHANNEL_ID).buildProgressNotification(
+    override fun getForegroundNotification(downloads: MutableList<Download>, notMetRequirements: Int): Notification {
+        val base = DownloadNotificationHelper(this, CHANNEL_ID).buildProgressNotification(
             this, android.R.drawable.stat_sys_download, null, null, downloads, notMetRequirements,
         )
+        // Some ROMs (ROG UI, HyperOS…) show the app's newest notification as a status-bar
+        // chip. This one re-posts every time a song starts or finishes downloading, which
+        // made the chip flick from the song's artwork to the download icon. Keep it quiet
+        // and always "older" than the media notification, in a group of its own.
+        return Notification.Builder.recoverBuilder(this, base)
+            .setWhen(0)
+            .setShowWhen(false)
+            .setOnlyAlertOnce(true)
+            .setGroup(CHANNEL_ID)
+            .setCategory(Notification.CATEGORY_PROGRESS)
+            .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_DEFERRED)
+            .build()
+    }
 
     private companion object {
         const val NOTIFICATION_ID = 2
