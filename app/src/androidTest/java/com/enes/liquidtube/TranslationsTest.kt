@@ -29,6 +29,26 @@ class TranslationsTest {
         assertEquals("Biblioteca", es["Library"])
     }
 
+    @Test fun germanIsUsedWithEnglishFallback() {
+        AppLanguage.code = "de"
+        AppLanguage.translations = Translations.load(ctx, "de")
+        assertEquals("Start", tr("Home", "Ana Sayfa"))
+        assertEquals("Mediathek", tr("Library", "Kitaplık"))
+        assertEquals("Only in English", tr("Only in English", "X"))
+    }
+
+    /** German and Spanish must cover every English line that's in the template. */
+    @Test fun germanAndSpanishAreComplete() {
+        val obj = org.json.JSONObject(ctx.assets.open("i18n/en.json").bufferedReader().use { it.readText() })
+        val enKeys = obj.keys().asSequence().toList()
+        assertTrue("template should have the full string set", enKeys.size >= 390)
+        for (lang in listOf("de", "es")) {
+            val map = Translations.load(ctx, lang)
+            val missing = enKeys.filter { it !in map }
+            assertTrue("$lang is missing ${missing.size} strings, e.g. ${missing.take(5)}", missing.isEmpty())
+        }
+    }
+
     @Test fun spanishIsUsedWithEnglishFallback() {
         AppLanguage.code = "es"
         AppLanguage.translations = Translations.load(ctx, "es")

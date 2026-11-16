@@ -16,6 +16,10 @@ def parse_str(s, i):
         ch = s[i]
         if ch == '\\':
             nxt = s[i+1] if i + 1 < len(s) else ''
+            if nxt == 'u' and i + 6 <= len(s):
+                out.append(chr(int(s[i+2:i+6], 16)))
+                i += 6
+                continue
             out.append(ESC.get(nxt, nxt))
             i += 2
             continue
