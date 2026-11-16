@@ -1,0 +1,43 @@
+name: Build check
+
+# Build the app on every push and PR, so a change that breaks the build is caught right
+# away — not at 20:00 when the scheduled release tries to build it. No signing secrets
+# here: it falls back to the debug key (build.gradle.kts), which still catches compile
+# and R8/shrinker breaks, the ones that actually fail releases.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.github/release-schedule'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # assembleRelease runs R8/shrinking (where releases usually break). The live YouTube
+      # tests are flaky and belong to the daily health check, so they're not a build gate.
+      - name: Build release APK (debug-signed)
+        run: ./gradlew :app:assembleRelease --no-daemon
