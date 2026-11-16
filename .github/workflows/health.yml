@@ -45,7 +45,9 @@ jobs:
               for m in re.finditer(r'<testcase name="(\w+)"[^>]*?(/>|>(.*?)</testcase>)', s, re.S):
                   name, body = m.group(1), m.group(3) or ""
                   fail = re.search(r'<failure message="([^"]*)"', body)
-                  if fail:
+                  if "<skipped" in body:
+                      rows.append(f"| ⏭️ `{name}` | skipped here (YouTube blocks data centres) |")
+                  elif fail:
                       failed.append(name)
                       rows.append(f"| ❌ `{name}` | {html.unescape(fail.group(1))[:200]} |")
                   else:
