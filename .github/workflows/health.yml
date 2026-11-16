@@ -1,0 +1,82 @@
+name: Health check
+
+# Every day, test the parts of YouTube Music LiquidTube depends on (search, home, albums,
+# radio, playing a song, lyrics). YouTube changes these without notice; when something
+# breaks, an issue is opened so it's known before users notice.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # daily, 06:00 UTC
+  workflow_dispatch:       # and on demand, from the Actions tab
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run the checks
+        id: tests
+        continue-on-error: true
+        run: ./gradlew :innertube:testDebugUnitTest --no-daemon
+
+      - name: Summarise
+        id: summary
+        if: always()
+        run: |
+          python3 - <<'EOF' > summary.md
+          import glob, re, html
+          rows, failed = [], []
+          for f in glob.glob("innertube/build/test-results/testDebugUnitTest/*.xml"):
+              s = open(f, encoding="utf-8").read()
+              for m in re.finditer(r'<testcase name="(\w+)"[^>]*?(/>|>(.*?)</testcase>)', s, re.S):
+                  name, body = m.group(1), m.group(3) or ""
+                  fail = re.search(r'<failure message="([^"]*)"', body)
+                  if fail:
+                      failed.append(name)
+                      rows.append(f"| ❌ `{name}` | {html.unescape(fail.group(1))[:200]} |")
+                  else:
+                      rows.append(f"| ✅ `{name}` | ok |")
+          print("| Check | Result |\n|---|---|")
+          print("\n".join(sorted(rows)) or "| ⚠️ | The checks didn't run (build failed) |")
+          open("failed.txt", "w").write(",".join(failed))
+          EOF
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update the issue
+        if: steps.tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BODY="$(printf 'Something LiquidTube depends on stopped working (%s).\n\n%s\n\nRun: %s' "$(date -u +%F)" "$(cat summary.md)" "$RUN")"
+          gh label create health-check --color D93F0B --description "Daily YouTube Music health check" 2>/dev/null || true
+          OPEN=$(gh issue list --label health-check --state open --json number --jq '.[0].number')
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "$BODY"
+          else
+            gh issue create --title "Health check failing: $(cat failed.txt)" --label health-check --body "$BODY"
+          fi
+          exit 1
+
+      - name: Close the issue when everything works again
+        if: steps.tests.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(gh issue list --label health-check --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "All checks pass again ($(date -u +%F))."
+          done
