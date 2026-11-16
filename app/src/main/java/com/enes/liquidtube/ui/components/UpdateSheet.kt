@@ -20,6 +20,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -155,4 +156,49 @@ private fun Buttons(confirmLabel: String, onConfirm: () -> Unit, onLater: () -> 
 private fun formatSize(bytes: Long): String {
     val mb = bytes / (1024.0 * 1024.0)
     return if (mb >= 1) "%.1f MB".format(mb) else "%.0f KB".format(bytes / 1024.0)
+}
+
+/**
+ * After a crash, asks once whether to report it. Nothing leaves the phone unless the user
+ * taps Report, and even then they see the GitHub issue before submitting it.
+ */
+@Composable
+fun CrashReportSheet() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var crash by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(com.enes.liquidtube.data.ProblemReport.pendingCrash())
+    }
+    val text = crash ?: return
+    val c = AppTheme.colors
+    val close = { com.enes.liquidtube.data.ProblemReport.clearCrash(); crash = null }
+
+    Dialog(onDismissRequest = close) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
+                .background(c.elevated)
+                .padding(22.dp),
+        ) {
+            Text(tr("LiquidTube Crashed", "LiquidTube Çöktü"), style = AppTheme.type.title2, color = c.label)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                tr(
+                    "Sorry about that. Send a report so it can be fixed? It opens a GitHub issue you can read and edit first. No account details are included.",
+                    "Bunun için üzgünüz. Düzeltilebilmesi için rapor gönderilsin mi? Önce okuyup düzenleyebileceğiniz bir GitHub sayfası açılır. Hesap bilgileri eklenmez.",
+                ),
+                style = AppTheme.type.subhead, color = c.secondaryLabel,
+            )
+            Spacer(Modifier.height(20.dp))
+            Buttons(
+                confirmLabel = tr("Report", "Bildir"),
+                onConfirm = {
+                    scope.launch { com.enes.liquidtube.data.ProblemReport.send(context, text) }
+                    close()
+                },
+                onLater = close,
+            )
+        }
+    }
 }

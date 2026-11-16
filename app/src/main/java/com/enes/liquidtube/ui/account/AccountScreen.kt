@@ -438,6 +438,22 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
             }
         }
 
+        SettingsGroup(tr("HELP", "YARDIM")) {
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val helpScope = androidx.compose.runtime.rememberCoroutineScope()
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Text(
+                    tr("Something not working? Send a report with your app version, phone model and recent log. It opens as a GitHub issue you can read and edit before sending. No account details are included.",
+                        "Bir şey çalışmıyor mu? Uygulama sürümü, telefon modeli ve son kayıtlarla bir rapor gönderin. Göndermeden önce okuyup düzenleyebileceğiniz bir GitHub sayfası olarak açılır. Hesap bilgileri eklenmez."),
+                    style = AppTheme.type.footnote, color = c.secondaryLabel,
+                )
+                Spacer(Modifier.height(12.dp))
+                WideButton(tr("Report a Problem", "Sorun Bildir")) {
+                    helpScope.launch { com.enes.liquidtube.data.ProblemReport.send(ctx, null) }
+                }
+            }
+        }
+
         SettingsGroup(tr("STATIONS", "İSTASYONLAR")) {
             val style by connection.settings.stationStyle.collectAsStateWithLifecycle()
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {

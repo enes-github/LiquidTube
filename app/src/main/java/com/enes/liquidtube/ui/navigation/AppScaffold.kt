@@ -295,6 +295,8 @@ fun AppScaffold(connection: PlayerConnection) {
           Box(Modifier.fillMaxSize().background(c.background)) {
             // "Update available" sheet; shows itself when a newer LiquidTube is out.
             com.enes.liquidtube.ui.components.UpdateSheet()
+            // "Send a report?" after a crash.
+            com.enes.liquidtube.ui.components.CrashReportSheet()
             // The whole screen is recorded for menus/sheets to blur only while one is open:
             // drawing through a recorded layer degrades Now Playing's progressive blur.
             Box(

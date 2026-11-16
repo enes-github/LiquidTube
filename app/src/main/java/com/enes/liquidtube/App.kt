@@ -11,6 +11,7 @@ import dagger.hilt.android.HiltAndroidApp
 class App : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
+        com.enes.liquidtube.data.ProblemReport.init(this)
         com.enes.innertube.InnerTube.logger = { android.util.Log.i("LiquidTube", it) }
         com.enes.liquidtube.data.ImagePrefetcher.init(this)
         com.enes.liquidtube.data.LyricsStore.init(this)
