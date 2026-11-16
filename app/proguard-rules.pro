@@ -24,3 +24,7 @@
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+# Open source, so scrambling names protects nothing; real names let the startup profile
+# (src/main/baseline-prof.txt) cover the whole app, and crash reports stay readable.
+-dontobfuscate

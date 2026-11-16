@@ -1,0 +1,7 @@
+# Startup profile: Android compiles these ahead of time when the app is installed
+# (via androidx.profileinstaller), instead of interpreting them on the first launches.
+# All of LiquidTube's own code, and the YouTube Music client.
+HSPLcom/enes/liquidtube/**->**(**)**
+HSPLcom/enes/innertube/**->**(**)**
+Lcom/enes/liquidtube/**;
+Lcom/enes/innertube/**;
