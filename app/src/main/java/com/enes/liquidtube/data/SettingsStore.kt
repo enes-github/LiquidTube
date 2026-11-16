@@ -15,6 +15,7 @@ class SettingsStore @Inject constructor(
     @ApplicationContext context: Context,
 ) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    private val appContext = context.applicationContext
 
     private val _appLanguage = MutableStateFlow(prefs.getString(KEY_APP_LANGUAGE, "") ?: "")
     /** Selected app language code ("" = System Default, "tr" = Turkish, "en" = English, etc.). */
@@ -34,8 +35,18 @@ class SettingsStore @Inject constructor(
     private fun applyLanguage(code: String) {
         com.enes.liquidtube.ui.theme.AppLanguage.code = code
         val lang = com.enes.liquidtube.ui.theme.AppLanguage.effective
+        // English and Turkish are built in; any other language loads its community file.
+        com.enes.liquidtube.ui.theme.AppLanguage.translations = Translations.load(appContext, lang)
         com.enes.innertube.InnerTube.hl = lang
         com.enes.innertube.InnerTube.gl = if (lang == "tr") "TR" else java.util.Locale.getDefault().country.ifBlank { "US" }
+    }
+
+    /** System Default + English + Turkish, plus any community languages found in assets/i18n. */
+    fun languageOptions(): List<LanguageOption> = buildList {
+        addAll(SUPPORTED_LANGUAGES)
+        Translations.available(appContext).forEach { code ->
+            add(LanguageOption(code, Translations.englishName(code), Translations.nativeName(code)))
+        }
     }
 
     private val _dataSaver = MutableStateFlow(prefs.getBoolean(KEY_DATA_SAVER, false))

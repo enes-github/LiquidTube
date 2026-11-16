@@ -578,7 +578,7 @@ fun AccountScreen(onBack: () -> Unit, onSignIn: () -> Unit) {
                     style = AppTheme.type.footnote, color = c.secondaryLabel,
                 )
                 Spacer(Modifier.height(10.dp))
-                val options = com.enes.liquidtube.data.SettingsStore.SUPPORTED_LANGUAGES
+                val options = remember { connection.settings.languageOptions() }
                 com.enes.liquidtube.ui.components.FilterChips(
                     options = options,
                     selected = options.firstOrNull { it.code == appLanguage } ?: options.first(),
