@@ -106,6 +106,17 @@ class PlaybackCache @Inject constructor(
         }
     }
 
+    /**
+     * Drop one song's bytes from the listening cache. Used when a stream errored part-way
+     * through: a half-cached song can mix formats on the next attempt (a dead Premium
+     * stream falling back to the regular one), which plays the cached seconds and then
+     * fails to decode the rest. Removing the partial lets the retry stream it cleanly.
+     */
+    fun evict(id: String) {
+        runCatching { cache.removeResource(id) }
+        refresh()
+    }
+
     private companion object { const val KEY_SONGS = "songs" }
 }
 

@@ -48,8 +48,20 @@ class StreamResolver @Inject constructor(
     val dataSourceFactory: ResolvingDataSource.Factory =
         ResolvingDataSource.Factory(httpFactory) { spec -> resolve(spec) }
 
+    private val premiumBlockedUntil = ConcurrentHashMap<String, Long>()
+
     fun invalidate(videoId: String) {
         cache.remove(videoId)
+    }
+
+    /**
+     * A Premium stream for [videoId] just failed mid-playback (e.g. its URL expired early).
+     * Skip Premium for this song for a while so it resolves to the stable regular stream and
+     * keeps playing, instead of dying on Premium again. The quality upgrader can still lift it
+     * back to Premium later, on its own verified path.
+     */
+    fun demotePremium(videoId: String) {
+        premiumBlockedUntil[videoId] = System.currentTimeMillis() + PREMIUM_DEMOTE_MS
     }
 
     /** Use this already-verified stream for [videoId] next (the quality upgrader). */
@@ -64,9 +76,10 @@ class StreamResolver @Inject constructor(
 
         val now = System.currentTimeMillis()
         val lowQuality = settings.dataSaver.value
-        val stream = cache[id]?.takeIf { it.expiresAtMs > now }
+        val premiumBlocked = (premiumBlockedUntil[id] ?: 0L) > now
+        val stream = cache[id]?.takeIf { it.expiresAtMs > now && !(premiumBlocked && it.clientName.contains("Premium")) }
             // 1. Premium 256kbps (separate module); any failure falls through unchanged.
-            ?: (if (premium.enabled(lowQuality)) runBlocking { premium.resolve(id) } else null)?.also {
+            ?: (if (premium.enabled(lowQuality) && !premiumBlocked) runBlocking { premium.resolve(id) } else null)?.also {
                 cache[id] = it
                 Log.i(TAG, "Resolved $id via ${it.clientName}: ${it.mimeType} @ ${it.bitrate / 1000}kbps")
             }
@@ -91,6 +104,7 @@ class StreamResolver @Inject constructor(
     companion object {
         const val TAG = "LiquidTube"
         const val PLACEHOLDER_HOST = "music.youtube.com"
+        private const val PREMIUM_DEMOTE_MS = 15 * 60_000L
         fun placeholderUri(videoId: String) = "https://$PLACEHOLDER_HOST/watch?v=$videoId"
     }
 }

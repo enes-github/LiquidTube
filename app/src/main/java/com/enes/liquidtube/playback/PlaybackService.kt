@@ -243,7 +243,29 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
                 .filterIsInstance<HttpDataSource.InvalidResponseCodeException>()
                 .firstOrNull()
             Log.e(TAG, "Playback error on $id: ${error.errorCodeName} http=${http?.responseCode}", error)
-            if (id != null) resolver.invalidate(id)
+            if (id != null) {
+                resolver.invalidate(id)
+                // A song that only half-streamed (e.g. a connection blip during a Premium
+                // stream) leaves a partial in the listening cache. On the next attempt the
+                // Premium URL may be dead and it falls back to a different format, so the
+                // cached seconds play and then the rest won't decode — it skips every time.
+                // Drop the partial (a finished download or fully-cached song is untouched)
+                // so the retry re-streams it in one consistent format.
+                if (!playCache.isCached(id)) playCache.evict(id)
+
+                // Premium stream died mid-song: don't skip. Fall back to the regular stream
+                // and carry on from the same spot. prepare() keeps the current position, and
+                // demoting Premium for this song makes the re-resolve pick the stable stream.
+                if (quality.isPremium(id)) {
+                    resolver.demotePremium(id)
+                    Log.i(TAG, "Premium failed on $id — continuing on the regular stream")
+                    retryId = id
+                    retries = 0
+                    player.prepare()
+                    player.play()
+                    return
+                }
+            }
 
             if (retryId != id) {
                 retryId = id
