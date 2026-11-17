@@ -90,11 +90,14 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
                     .build(),
                 /* handleAudioFocus = */ true,
             )
-            .setHandleAudioBecomingNoisy(true)
+            // We handle "becoming noisy" ourselves (see noisyReceiver) so a flaky USB/AUX
+            // adapter that blips the audio output for a moment doesn't bounce playback.
+            .setHandleAudioBecomingNoisy(false)
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
         player.addListener(RecoveryListener(player))
+        registerNoisyHandling(player)
         fx.attach(player.audioSessionId)
         player.addListener(object : Player.Listener {
             override fun onAudioSessionIdChanged(audioSessionId: Int) { fx.attach(audioSessionId); applyFx(player) }
@@ -351,6 +354,64 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
         }
     }
 
+    // -------------------------------------------- output changes (becoming noisy)
+
+    private var noisyPlayer: ExoPlayer? = null
+
+    /** Runs a beat after the output blipped: pause only if it's really gone. */
+    private val noisyPauseCheck = Runnable {
+        val p = noisyPlayer ?: return@Runnable
+        if (hasListeningOutput()) return@Runnable      // came right back — a blip, keep playing
+        if (p.playWhenReady) {
+            Log.i(TAG, "Audio output gone — pausing")
+            p.pause()
+        }
+    }
+
+    private val noisyReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            if (intent?.action != android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY) return
+            // A cheap USB-C/AUX adapter re-announces its output every so often. Pausing on
+            // each blip fought ExoPlayer's resume into a play/pause loop. So don't pause
+            // instantly: wait briefly and pause only if the output is still gone (a real
+            // unplug), not if the adapter reconnects a moment later.
+            handler.removeCallbacks(noisyPauseCheck)
+            handler.postDelayed(noisyPauseCheck, NOISY_GRACE_MS)
+        }
+    }
+
+    private fun registerNoisyHandling(player: ExoPlayer) {
+        noisyPlayer = player
+        androidx.core.content.ContextCompat.registerReceiver(
+            this, noisyReceiver,
+            android.content.IntentFilter(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        // One line per automatic play/pause with the cause — a flaky-adapter loop stands out.
+        player.addListener(object : Player.Listener {
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                Log.i(TAG, "playWhenReady=$playWhenReady (${reasonName(reason)}) output=${if (hasListeningOutput()) "device" else "speaker"}")
+            }
+        })
+    }
+
+    /** A real listening output — wired, USB/AUX, Bluetooth or a dock — is connected right now. */
+    private fun hasListeningOutput(): Boolean {
+        val audio = getSystemService(android.media.AudioManager::class.java) ?: return false
+        return runCatching {
+            audio.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).any { it.type in LISTENING_OUTPUTS }
+        }.getOrDefault(false)
+    }
+
+    private fun reasonName(reason: Int): String = when (reason) {
+        Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST -> "USER"
+        Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS -> "FOCUS_LOSS"
+        Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY -> "BECOMING_NOISY"
+        Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE -> "REMOTE"
+        Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM -> "END_OF_ITEM"
+        else -> "reason$reason"
+    }
+
     // ------------------------------------------------------------- crossfade
 
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -481,6 +542,8 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        runCatching { unregisterReceiver(noisyReceiver) }
+        noisyPlayer = null
         releaseTail()
         fx.release()
         LockScreenLyrics.player = null
@@ -497,6 +560,20 @@ class PlaybackService : androidx.media3.session.MediaLibraryService() {
     companion object {
         const val TAG = "LiquidTube"
         const val ACTION_FAVORITE = "com.enes.liquidtube.FAVORITE"
+        private const val NOISY_GRACE_MS = 1200L
+        private val LISTENING_OUTPUTS = intArrayOf(
+            android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET,
+            android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+            android.media.AudioDeviceInfo.TYPE_AUX_LINE,
+            android.media.AudioDeviceInfo.TYPE_LINE_ANALOG,
+            android.media.AudioDeviceInfo.TYPE_LINE_DIGITAL,
+            android.media.AudioDeviceInfo.TYPE_USB_HEADSET,
+            android.media.AudioDeviceInfo.TYPE_USB_DEVICE,
+            android.media.AudioDeviceInfo.TYPE_USB_ACCESSORY,
+            android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            android.media.AudioDeviceInfo.TYPE_BLE_HEADSET,
+            android.media.AudioDeviceInfo.TYPE_DOCK,
+        )
         fun placeholderUri(videoId: String) = StreamResolver.placeholderUri(videoId)
     }
 }
